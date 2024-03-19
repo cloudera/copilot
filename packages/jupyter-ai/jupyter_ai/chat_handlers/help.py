@@ -6,7 +6,7 @@ from jupyter_ai.models import AgentChatMessage, HumanChatMessage
 
 from .base import BaseChatHandler, SlashCommandRoutingType
 
-HELP_MESSAGE = """Hi there! I'm Jupyternaut, your programming assistant.
+HELP_MESSAGE = """Hi there! I'm Cloudera Copilot, your programming assistant.
 You can ask me a question using the text box below. You can also use these commands:
 {commands}
 

@@ -130,9 +130,8 @@ function ChatBody({
       >
         <Stack spacing={4}>
           <p className="jp-ai-ChatSettings-welcome">
-            Welcome to Jupyter AI! To get started, please select a language
-            model to chat with from the settings panel. You may also need to
-            provide API credentials, so have those handy.
+            Welcome to JupyterAI! To get started, please ask your site admin
+            to enable Cloudera Copilot.
           </p>
           <Button
             variant="contained"

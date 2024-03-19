@@ -62,7 +62,7 @@ class BaseChatHandler:
     `False` for handlers like `/help`."""
 
     _requests_count = 0
-    """Class attribute set to the number of requests that Jupyternaut is
+    """Class attribute set to the number of requests that Cloudera Copilot is
     currently handling."""
 
     def __init__(

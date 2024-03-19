@@ -59,7 +59,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   const name =
     props.message.type === 'human'
       ? props.message.client.display_name
-      : 'Jupyternaut';
+      : 'Cloudera Copilot';
 
   return (
     <Box
