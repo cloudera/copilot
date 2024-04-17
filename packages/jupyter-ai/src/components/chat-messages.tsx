@@ -5,7 +5,7 @@ import type { SxProps, Theme } from '@mui/material';
 
 import { AiService } from '../handler';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { Jupyternaut } from '../icons';
+import { ClouderaCopilot } from '../icons';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { useCollaboratorsContext } from '../contexts/collaborators-context';
 
@@ -50,8 +50,8 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     );
   } else {
     avatar = (
-      <Avatar sx={{ ...sharedStyles, bgcolor: 'var(--jp-jupyter-icon-color)' }}>
-        <Jupyternaut display="block" height="100%" width="100%" />
+      <Avatar sx={{ ...sharedStyles, bgcolor: 'white' }}>
+        <ClouderaCopilot display="block" height="100%" width="100%" />
       </Avatar>
     );
   }
