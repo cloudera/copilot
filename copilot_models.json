@@ -1,0 +1,1 @@
+{"copilot_models":[{"provider":"Amazon Bedrock","model":"anthropic.claude-3-sonnet-20240229-v1:0"}, {"provider": "Amazon Bedrock","model": "anthropic.claude-v2"se}, {"provider": "Amazon Bedrock","model": "meta.llama2-70b-chat-v1"}, {"provider": "Amazon Bedrock","model": "amazon.titan-embed-text-v1"}]}
