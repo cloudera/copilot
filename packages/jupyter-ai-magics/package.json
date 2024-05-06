@@ -1,21 +1,19 @@
 {
   "name": "@jupyter-ai/magics",
-  "version": "2.11.0",
+  "version": "2.11.0-cloudera",
   "description": "Jupyter AI magics Python package. Not published on NPM.",
   "private": true,
-  "homepage": "https://github.com/jupyterlab/jupyter-ai",
+  "homepage": "https://github.infra.cloudera.com/Sense/copilot",
   "bugs": {
-    "url": "https://github.com/jupyterlab/jupyter-ai/issues",
-    "email": "jupyter@googlegroups.com"
+    "url": "https://github.infra.cloudera.com/Sense/copilot/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
-    "name": "Project Jupyter",
-    "email": "jupyter@googlegroups.com"
+    "name": "Cloudera, Inc."
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jupyterlab/jupyter-ai.git"
+    "url": "https://github.infra.cloudera.com/Sense/copilot.git"
   },
   "scripts": {
     "dev-install": "pip install -e \".[dev,all]\"",

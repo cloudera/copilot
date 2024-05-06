@@ -1,0 +1,6 @@
+[project]
+name = "cloudera_ai_inference_package"
+version = "0.0.1"
+
+[project.entry-points."jupyter_ai.model_providers"]
+cloudera-ai-inference-provider = "cloudera_ai_inference_provider:ClouderaAIInferenceProvider"
