@@ -1,6 +1,6 @@
 {
   "name": "@jupyter-ai/magics",
-  "version": "2.11.0-cloudera",
+  "version": "2.11.0",
   "description": "Jupyter AI magics Python package. Not published on NPM.",
   "private": true,
   "homepage": "https://github.infra.cloudera.com/Sense/copilot",
