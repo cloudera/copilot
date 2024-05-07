@@ -323,7 +323,7 @@ class ModelProviderHandler(ProviderHandler):
 
         # Step 1: gather providers
         for provider in self.lm_providers.values():
-            if "bedrock" not in provider.id and provider.id != "ai_inference_provider":
+            if "bedrock" not in provider.id and provider.id != "cloudera":
                 continue
 
             enabled_models = []
@@ -385,7 +385,7 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
         providers = []
 
         for provider in self.em_providers.values():
-            if "bedrock" not in provider.id and provider.id != "ai_inference_provider":
+            if "bedrock" not in provider.id and provider.id != "cloudera":
                 continue
 
             enabled_models = []

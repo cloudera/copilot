@@ -40,7 +40,7 @@ def getCopilotModels(config_dir):
 
 class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
     api_key = "API_KEY2"
-    id = "ai_inference_provider"
+    id = "cloudera"
     name = "Cloudera AI Inference Provider"
     model_id_key = "vllm_llama2"
     model = ""
