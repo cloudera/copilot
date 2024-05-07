@@ -361,15 +361,46 @@ class ModelProviderHandler(ProviderHandler):
 
 
 class EmbeddingsModelProviderHandler(ProviderHandler):
+    def getConfiguredThirdPartyModels(self):
+        copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR")
+        if not os.path.exists(copilot_config_dir):
+            self.log.warning("Copilot config dir does not exist")
+            return []
+    
+        f = open(copilot_config_dir)
+        copilot_config = json.load(f)
+        third_party_models = []
+        if copilot_config and copilot_config['third_party_models']:
+            third_party_models = copilot_config['third_party_models']
+        f.close()
+        return third_party_models
+
     @web.authenticated
     def get(self):
+        models = self.getConfiguredThirdPartyModels()
+        model_names = []
+        for model in models:
+             model_names.append(model['name'])
+
         providers = []
+
         for provider in self.em_providers.values():
+            if "bedrock" not in provider.id and provider.id != "ai_inference_provider":
+                continue
+
+            enabled_models = []
+            if "bedrock" in provider.id:
+                for provider_model in provider.models:
+                    if provider_model in model_names:
+                        enabled_models.append(provider_model)
+            else:
+                enabled_models = provider.models
+
             providers.append(
                 ListProvidersEntry(
                     id=provider.id,
                     name=provider.name,
-                    models=provider.models,
+                    models=enabled_models,
                     auth_strategy=provider.auth_strategy,
                     registry=provider.registry,
                     fields=provider.fields,
