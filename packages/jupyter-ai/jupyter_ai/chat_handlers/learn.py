@@ -32,7 +32,7 @@ METADATA_SAVE_PATH = os.path.join(INDEX_SAVE_DIR, "metadata.json")
 class LearnChatHandler(BaseChatHandler):
     id = "learn"
     name = "Learn Local Data"
-    help = "Teach Jupyternaut about files on your system"
+    help = "Teach Cloudera Copilot about files on your system"
     routing_type = SlashCommandRoutingType(slash_id="learn")
 
     uses_llm = True

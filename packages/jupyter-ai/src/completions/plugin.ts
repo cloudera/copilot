@@ -133,7 +133,7 @@ export const completionPlugin: JupyterFrontEndPlugin<void> = {
           enabled: !jaiIcpSettings.enabled
         });
       },
-      label: 'Enable completions by Jupyternaut',
+      label: 'Enable completions by Cloudera Copilot',
       isToggled: () => {
         return provider.isEnabled();
       }

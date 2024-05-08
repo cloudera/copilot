@@ -20,7 +20,7 @@ export class JaiStatusItem
     this._items = [];
 
     this.addClass('jp-mod-highlighted');
-    this.title.caption = 'Open Jupyternaut status menu';
+    this.title.caption = 'Open Cloudera Copilot status menu';
     this.node.addEventListener('click', this._handleClick);
   }
 

@@ -231,22 +231,22 @@ Once you have set all the necessary keys, click the "back" (left arrow) button i
     alt="Screen shot of the initial, blank, chat interface."
     class="screenshot" />
 
-To compose a message, type it in the text box at the bottom of the chat interface and press <kbd>ENTER</kbd> to send it. You can press <kbd>SHIFT</kbd>+<kbd>ENTER</kbd> to add a new line. (These are the default keybindings; you can change them in the chat settings pane.) Once you have sent a message, you should see a response from Jupyternaut, the Jupyter AI chatbot.
+To compose a message, type it in the text box at the bottom of the chat interface and press <kbd>ENTER</kbd> to send it. You can press <kbd>SHIFT</kbd>+<kbd>ENTER</kbd> to add a new line. (These are the default keybindings; you can change them in the chat settings pane.) Once you have sent a message, you should see a response from Cloudera Copilot, the Jupyter AI chatbot.
 
 <img src="../_static/chat-hello-world.png"
-    alt='Screen shot of an example "Hello world" message sent to Jupyternaut, who responds with "Hello world, how are you today?"'
+    alt='Screen shot of an example "Hello world" message sent to Cloudera Copilot, who responds with "Hello world, how are you today?"'
     class="screenshot" />
 
 The chat backend remembers the last two exchanges in your conversation and passes them to the language model. You can ask follow up questions without repeating information from your previous conversations. Here is an example of a chat conversation with a follow up question:
 
 #### Initial question
 <img src="../_static/chat-history-context-1.png"
-    alt='Screen shot of an example coding question sent to Jupyternaut, who responds with the code and explanation.'
+    alt='Screen shot of an example coding question sent to Cloudera Copilot, who responds with the code and explanation.'
     class="screenshot" />
 
 #### Follow-up question
 <img src="../_static/chat-history-context-2.png"
-    alt='Screen shot of an example follow up question sent to Jupyternaut, who responds with the improved code and explanation.'
+    alt='Screen shot of an example follow up question sent to Cloudera Copilot, who responds with the improved code and explanation.'
     class="screenshot" />
 
 ### SageMaker endpoints usage
@@ -351,13 +351,13 @@ After highlighting a portion of your notebook, check "Include selection" in the 
     alt='Screen shot of JupyterLab with Jupyter AI&apos;s chat panel active. A Python function is selected, the user has "What does this code do?" as their prompt, and the user has chosen to include the selection with their message.'
     class="screenshot" />
 
-Below your message, you will see Jupyternaut's response.
+Below your message, you will see Cloudera Copilot's response.
 
 <img src="../_static/chat-explain-code-output.png"
     alt="Screen shot of Jupyter AI's chat panel, showing an answer to the question asked above."
     class="screenshot" />
 
-You can copy Jupyternaut's response to the clipboard so that you can paste it into your notebook, or into any other application. You can also choose to replace the selection with Jupyternaut's response by clicking "Replace selection" before you send your message.
+You can copy Cloudera Copilot's response to the clipboard so that you can paste it into your notebook, or into any other application. You can also choose to replace the selection with Cloudera Copilot's response by clicking "Replace selection" before you send your message.
 
 :::{warning}
 :name: replace-selection
@@ -370,7 +370,7 @@ you run it.
     alt='Screen shot of Jupyter AI with a Python function selected, the user having typed "Rewrite this function to be iterative, not recursive" as their prompt, and with the user having chosen to include the selection with their message and to replace the selection with the response.'
     class="screenshot" />
 
-After Jupyternaut sends a response, your notebook will be updated immediately with the response replacing the selection. You can also see the response in the chat panel.
+After Cloudera Copilot sends a response, your notebook will be updated immediately with the response replacing the selection. You can also see the response in the chat panel.
 
 ### Generating a new notebook
 
@@ -383,7 +383,7 @@ You can use Jupyter AI to generate an entire notebook from a text prompt. To get
 Generating a notebook can take a substantial amount of time, so Jupyter AI will respond to your message immediately while it works. You can continue to ask it other questions in the meantime.
 
 <img src="../_static/chat-generate-command-response.png"
-    alt="Screen shot of Jupyternaut responding to a generate message with a message that it is working on a notebook."
+    alt="Screen shot of Cloudera Copilot responding to a generate message with a message that it is working on a notebook."
     class="screenshot" />
 
 :::{note}
@@ -405,7 +405,7 @@ before you run it.
 
 ### Learning about local data
 
-Using the `/learn` command, you can teach Jupyter AI about local data so that Jupyternaut can include it when answering your questions. This local data is embedded using the embedding model you selected in the settings panel.
+Using the `/learn` command, you can teach Jupyter AI about local data so that JCloudera Copilot an include it when answering your questions. This local data is embedded using the embedding model you selected in the settings panel.
 
 :::{warning}
 :name: learning-embedding-model
