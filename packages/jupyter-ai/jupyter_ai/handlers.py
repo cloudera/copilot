@@ -299,7 +299,7 @@ class ProviderHandler(BaseAPIHandler):
 class ModelProviderHandler(ProviderHandler):
     def getConfiguredThirdPartyModels(self):
         copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR")
-        if not os.path.exists(copilot_config_dir):
+        if not copilot_config_dir or not os.path.exists(copilot_config_dir):
             self.log.warning("Copilot config dir does not exist")
             return []
 
@@ -363,7 +363,7 @@ class ModelProviderHandler(ProviderHandler):
 class EmbeddingsModelProviderHandler(ProviderHandler):
     def getConfiguredThirdPartyModels(self):
         copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR")
-        if not os.path.exists(copilot_config_dir):
+        if not copilot_config_dir or not os.path.exists(copilot_config_dir):
             self.log.warning("Copilot config dir does not exist")
             return []
     

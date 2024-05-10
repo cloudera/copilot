@@ -19,7 +19,7 @@ from langchain.llms.base import LLM
 import requests
 
 def getCopilotModels(config_dir):
-    if not os.path.exists(config_dir):
+    if not config_dir or not os.path.exists(config_dir):
         return [], []
 
     f = open(config_dir)
@@ -45,7 +45,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
     model_id_key = "vllm_llama2"
     model = ""
 
-    copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR")
+    copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR") or ""
     ai_inference_models, models = getCopilotModels(copilot_config_dir)
     '''["casperhansen_llama-3-8b-instruct-awq"]'''
     cdp_cli_path = "/Users/gavan/Library/Python/3.9/bin/cdp"
