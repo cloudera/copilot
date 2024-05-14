@@ -26,8 +26,8 @@ def getCopilotModels(config_dir):
     copilot_config = json.load(f)
     logging.error(copilot_config)
     ai_inference_models = []
-    if copilot_config and copilot_config['ai_inference_models']:
-        ai_inference_models = copilot_config['ai_inference_models']
+    if copilot_config and "aiInferenceModels" in copilot_config:
+        ai_inference_models = copilot_config['aiInferenceModels']
     f.close()
 
     models = []
@@ -47,9 +47,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
 
     copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR") or ""
     ai_inference_models, models = getCopilotModels(copilot_config_dir)
-    '''["casperhansen_llama-3-8b-instruct-awq"]'''
-    cdp_cli_path = "/Users/gavan/Library/Python/3.9/bin/cdp"
-    '''"/home/cdsw/.local/bin/cdp"'''
+    cdp_cli_path = "/home/cdsw/.local/bin/cdp"
 
     MultiEnvAuthStrategy(names=["CDP_PRIVATE_KEY", "CDP_ACCESS_KEY_ID", "CDP_REGION", "CDP_ENDPOINT_URL", "ENDPOINT_URL"])
 
@@ -72,21 +70,6 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
 
         completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "cdp_endpoint_url", cdp_endpoint_url])
         return completed_process.returncode == 0
-
-    def LoadCopilotConfig(self, config_dir):
-        if not os.path.exists(config_dir):
-            return False
-
-        f = open(config_dir)
-        copilot_config = json.load(f)
-        logging.error(copilot_config)
-        if copilot_config and copilot_config['ai_inference_models']:
-            self.ai_inference_models = copilot_config['ai_inference_models']
-        f.close()
-
-        for ai_inference_model in self.ai_inference_models:
-            logging.error(ai_inference_model)
-            self.models.append(ai_inference_model['name'])
 
     def GetCDPToken(self):
         logging.error("CDP CLI Path:")
@@ -125,8 +108,6 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         if not (cdp_private_key and cdp_access_key_id and cdp_region and cdp_endpoint_url and endpoint_url and cdp_cli_path):
             return
         self.WriteParamsToCDPConfig(cdp_private_key, cdp_access_key_id, cdp_region, endpoint_url, cdp_endpoint_url)'''
-        copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR")
-        self.LoadCopilotConfig(copilot_config_dir)
 
     @property
     def _llm_type(self) -> str:
@@ -152,23 +133,17 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
             logging.error("Unable to find endpoint: " + self.model)
             return "Error: unable to find endpoint: " + self.model
 
-        '''Read from /tmp/copilot/config'''
         logging.error("call kwargs:")
         logging.error(kwargs)
         logging.error('prompt:')
         logging.error(prompt)
         logging.error('prompt:')
-        '''logging.error(prompt[-1].content.encode('unicode_escape').decode("utf-8") )'''
         logging.error(prompt[-1].content)
-        '''req_data = '{"request":{"prompt_64":"' + stringToB64String(prompt[-1].content)'''
-        req_data = '{"prompt":"' + 'You are Cloudera Copilot, a conversational assistant living in JupyterLab to help users. You are not a language model, but rather an application built on a foundation model from Cloudera AI Inference Provider called casperhansen_llama-3-8b-instruct-awq. You are talkative and you provide lots of specific details from the foundation model\'s context. You may use Markdown to format your response. Code blocks must be formatted in Markdown. Math should be rendered with inline TeX markup, surrounded by $. If you do not know the answer to a question, answer truthfully by responding that you do not know. The following is a friendly conversation between you and a human. ' + prompt[-1].content.encode('unicode_escape').decode("utf-8")
+        req_data = '{"prompt":"[INST]<<SYS>>You are Cloudera Copilot, a conversational assistant living in JupyterLab to help users. You are not a language model, but rather an application built on a foundation model from Cloudera AI Inference Provider called casperhansen_llama-3-8b-instruct-awq. You are talkative and you provide lots of specific details from the foundation model\'s context. You may use Markdown to format your response. Code blocks must be formatted in Markdown. Math should be rendered with inline TeX markup, surrounded by $. If you do not know the answer to a question, answer truthfully by responding that you do not know. The following is a friendly conversation between you and a human.<</SYS>> ' + prompt[-1].content.encode('unicode_escape').decode("utf-8") + '[/INST]'
 
-        '''req_data = '{"request":{"messages": [{ "content": "You are a polite and respectful chatbot helping people plan a vacation.", "role": "system" }, { "content": "' + prompt[-1].content.encode('unicode_escape').decode("utf-8") + '", "role": "user"}]'''
-        '''my_req_data = req_data + '","model":"' + self.model + '","temperature":"0.1","max_new_tokens":"1024","top_p":"0.9","top_k":"10","repetition_penalty":"1.0","num_beams":"1"}}'''
         my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256}'
         logging.error('req:')
         logging.error(my_req_data)
-        '''my_req_data = '{"instances": [{"data": "' + prompt[-1].content.split('\n')[0] + '"}]}' '''
         logging.error('req:')
         logging.error(my_req_data)
 
@@ -184,7 +159,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
             r = requests.post(inference_endpoint,
                               data = my_req_data,
                               headers={'Content-Type': 'application/json',
-                           'Authorization': 'Bearer ' + cdp_token}, verify=False)
+                              'Authorization': 'Bearer ' + cdp_token}, verify=False)
         except:
             return "Request to Cloudera AI Inference Service failed."
 
