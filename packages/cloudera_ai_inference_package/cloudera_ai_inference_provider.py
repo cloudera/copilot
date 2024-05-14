@@ -99,7 +99,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         self.model = kwargs.get("model_id")
         logging.basicConfig(filename="copilot.txt", level=logging.DEBUG, format="")
         model = kwargs.get("model_id")
-        '''cdp_private_key = os.getenv("CDP_PRIVATE_KEY")
+        cdp_private_key = os.getenv("CDP_PRIVATE_KEY")
         cdp_access_key_id = os.getenv("CDP_ACCESS_KEY_ID")
         cdp_region = os.getenv("CDP_REGION")
         endpoint_url = os.getenv("ENDPOINT_URL")
@@ -107,7 +107,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         cdp_cli_path = self.cdp_cli_path
         if not (cdp_private_key and cdp_access_key_id and cdp_region and cdp_endpoint_url and endpoint_url and cdp_cli_path):
             return
-        self.WriteParamsToCDPConfig(cdp_private_key, cdp_access_key_id, cdp_region, endpoint_url, cdp_endpoint_url)'''
+        self.WriteParamsToCDPConfig(cdp_private_key, cdp_access_key_id, cdp_region, endpoint_url, cdp_endpoint_url)
 
     @property
     def _llm_type(self) -> str:
