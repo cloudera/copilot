@@ -306,8 +306,8 @@ class ModelProviderHandler(ProviderHandler):
         f = open(copilot_config_dir)
         copilot_config = json.load(f)
         third_party_models = []
-        if copilot_config and copilot_config['third_party_models']:
-            third_party_models = copilot_config['third_party_models']
+        if copilot_config and "thirdPartyModels" in copilot_config:
+            third_party_models = copilot_config["thirdPartyModels"]
         f.close()
         return third_party_models
 
@@ -370,8 +370,8 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
         f = open(copilot_config_dir)
         copilot_config = json.load(f)
         third_party_models = []
-        if copilot_config and copilot_config['third_party_models']:
-            third_party_models = copilot_config['third_party_models']
+        if copilot_config and "thirdPartyModels" in copilot_config:
+            third_party_models = copilot_config["thirdPartyModels"]
         f.close()
         return third_party_models
 
