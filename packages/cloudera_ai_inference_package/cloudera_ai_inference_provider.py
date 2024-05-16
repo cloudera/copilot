@@ -139,7 +139,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         logging.error(prompt)
         logging.error('prompt:')
         logging.error(prompt[-1].content)
-        req_data = '{"prompt":"[INST]<<SYS>>You are Cloudera Copilot, a conversational assistant living in JupyterLab to help users. You are not a language model, but rather an application built on a foundation model from Cloudera AI Inference Provider called casperhansen_llama-3-8b-instruct-awq. You are talkative and you provide lots of specific details from the foundation model\'s context. You may use Markdown to format your response. Code blocks must be formatted in Markdown. Math should be rendered with inline TeX markup, surrounded by $. If you do not know the answer to a question, answer truthfully by responding that you do not know. The following is a friendly conversation between you and a human.<</SYS>> ' + prompt[-1].content.encode('unicode_escape').decode("utf-8") + '[/INST]'
+        req_data = '{"prompt": "' + prompt[-1].content.encode('unicode_escape').decode("utf-8")
 
         my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256}'
         logging.error('req:')
