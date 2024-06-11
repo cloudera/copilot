@@ -306,7 +306,7 @@ class ModelProviderHandler(ProviderHandler):
         f = open(copilot_config_dir)
         copilot_config = json.load(f)
         third_party_models = []
-        if copilot_config and "thirdPartyModels" in copilot_config:
+        if copilot_config and "thirdPartyModels" in copilot_config and copilot_config["thirdPartyModels"]:
             third_party_models = copilot_config["thirdPartyModels"]
         f.close()
         return third_party_models
@@ -318,8 +318,9 @@ class ModelProviderHandler(ProviderHandler):
         # Read enabled models from config file.
         models = self.getConfiguredThirdPartyModels()
         model_names = []
-        for model in models:
-             model_names.append(model['name'])
+        if models:
+            for model in models:
+                model_names.append(model['name'])
 
         # Step 1: gather providers
         for provider in self.lm_providers.values():
@@ -370,7 +371,7 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
         f = open(copilot_config_dir)
         copilot_config = json.load(f)
         third_party_models = []
-        if copilot_config and "thirdPartyModels" in copilot_config:
+        if copilot_config and "thirdPartyModels" in copilot_config and copilot_config["thirdPartyModels"]:
             third_party_models = copilot_config["thirdPartyModels"]
         f.close()
         return third_party_models
@@ -379,8 +380,9 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
     def get(self):
         models = self.getConfiguredThirdPartyModels()
         model_names = []
-        for model in models:
-             model_names.append(model['name'])
+        if models:
+            for model in models:
+                model_names.append(model['name'])
 
         providers = []
 
