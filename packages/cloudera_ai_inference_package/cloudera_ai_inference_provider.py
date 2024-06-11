@@ -26,7 +26,7 @@ def getCopilotModels(config_dir):
     copilot_config = json.load(f)
     logging.error(copilot_config)
     ai_inference_models = []
-    if copilot_config and "aiInferenceModels" in copilot_config:
+    if copilot_config and "aiInferenceModels" in copilot_config and copilot_config["aiInferenceModels"]:
         ai_inference_models = copilot_config['aiInferenceModels']
     f.close()
 
@@ -94,7 +94,6 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         return response['token']
 
     def __init__(self, **kwargs):
-        print("init kwargs:", kwargs)
         super().__init__(**kwargs)
         self.model = kwargs.get("model_id")
         logging.basicConfig(filename="copilot.txt", level=logging.DEBUG, format="")
@@ -144,12 +143,12 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256}'
         logging.error('req:')
         logging.error(my_req_data)
-        logging.error('req:')
-        logging.error(my_req_data)
 
         cdp_token = self.GetCDPToken()
         logging.error('cdp_token:')
         logging.error(cdp_token)
+        logging.error('inference_endpoint:')
+        logging.error(inference_endpoint)
         if not cdp_token:
             logging.error("Unable to get CDP Token.")
             return "Unable to get CDP Token. Please install CDP CLI by running the command 'pip install cdpcli' in Terminal Access and make sure all required environment variables are set. See https://docs.cloudera.com/r/jupyter-copilot for more details."
@@ -160,17 +159,20 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
                               data = my_req_data,
                               headers={'Content-Type': 'application/json',
                               'Authorization': 'Bearer ' + cdp_token}, verify=False)
-        except:
+        except Exception as e:
+            print(e)
             return "Request to Cloudera AI Inference Service failed."
 
         logging.error('r:')
         logging.error(r)
-        logging.error('rjson:')
-        logging.error(r.json())
-        if r.json()['choices'] and len(r.json()['choices']) > 0 and r.json()['choices'][0]['text']:
+        if r.json():
+          logging.error('rjson:')
+          logging.error(r.json())
+          if r.json()['choices'] and len(r.json()['choices']) > 0 and r.json()['choices'][0]['text']:
             return r.json()['choices'][0]['text']
-        logging.error('response:')
-        return r.json()
+        logging.error('No r.json in response.')
+        logging.error(r)
+        return r
 
         decoded_str = b64StringToString(r)
         logging.error('rjson:')
