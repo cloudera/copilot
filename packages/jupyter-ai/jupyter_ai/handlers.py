@@ -371,10 +371,10 @@ class ModelProviderHandler(ProviderHandler):
 
         # Read enabled models from config file.
         models = self.getConfiguredThirdPartyModels()
-        model_names = []
+        configured_model_names = []
         if models:
             for model in models:
-                model_names.append(model['name'])
+                configured_model_names.append(model['name'])
 
         # Step 1: gather providers
         for provider in self.lm_providers.values():
@@ -383,12 +383,10 @@ class ModelProviderHandler(ProviderHandler):
 
             enabled_models = []
             if "bedrock" in provider.id:
-                for provider_model in provider.models:
-                    if provider_model in model_names:
-                        enabled_models.append(provider_model)
+                enabled_models = [model for model in provider.models if model in configured_model_names]
             else:
                 enabled_models = provider.models
-           
+
             optionals = {}
             if provider.model_id_label:
                 optionals["model_id_label"] = provider.model_id_label
@@ -397,7 +395,9 @@ class ModelProviderHandler(ProviderHandler):
                 ListProvidersEntry(
                     id=provider.id,
                     name=provider.name,
-                    models=provider.models,
+                    models=enabled_models,
+                    chat_models=[model for model in provider.chat_models() if model in enabled_models],
+                    completion_models=[model for model in provider.completion_models() if model in enabled_models],
                     help=provider.help,
                     auth_strategy=provider.auth_strategy,
                     registry=provider.registry,
@@ -413,7 +413,6 @@ class ModelProviderHandler(ProviderHandler):
         # Finally, yield response.
         response = ListProvidersResponse(providers=providers)
         self.finish(response.json())
-
 
 class EmbeddingsModelProviderHandler(ProviderHandler):
     def getConfiguredThirdPartyModels(self):
