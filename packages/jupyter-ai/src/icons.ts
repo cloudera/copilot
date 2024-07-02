@@ -3,7 +3,6 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import chatSvgStr from '../style/icons/chat.svg';
-import clouderaCopilotSvg from '../style/icons/cloudera-copilot.svg';
 import jupyternautSvg from '../style/icons/jupyternaut.svg';
 import replaceCellSvg from '../style/icons/replace-cell.svg';
 
@@ -17,11 +16,6 @@ export const jupyternautIcon = new LabIcon({
   svgstr: jupyternautSvg
 });
 
-export const clouderaCopilotIcon = new LabIcon({
-  name: 'jupyter-ai::clouderaCopilot',
-  svgstr: clouderaCopilotSvg
-});
-
 export const replaceCellIcon = new LabIcon({
   name: 'jupyter-ai::replace-cell',
   svgstr: replaceCellSvg
@@ -31,5 +25,3 @@ export const replaceCellIcon = new LabIcon({
 // to configure the icon shown on agent replies in the chat UI, please specify a
 // custom `Persona`.
 export const Jupyternaut = jupyternautIcon.react;
-
-export const ClouderaCopilot = clouderaCopilotIcon.react;

@@ -24,3 +24,7 @@ class Persona(BaseModel):
 
 JUPYTERNAUT_AVATAR_ROUTE = "api/ai/static/jupyternaut.svg"
 JupyternautPersona = Persona(name="Jupyternaut", avatar_route=JUPYTERNAUT_AVATAR_ROUTE)
+
+# packages/jupyter-ai/style/icons
+CLOUDERA_COPILOT_AVATAR_ROUTE = "api/ai/static/cloudera-copilot.svg"
+ClouderaCopilotPersona = Persona(name="Cloudera Copilot", avatar_route=CLOUDERA_COPILOT_AVATAR_ROUTE)

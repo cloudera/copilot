@@ -7,7 +7,6 @@ import { ServerConnection } from '@jupyterlab/services';
 // TODO: delete jupyternaut from frontend package
 
 import { AiService } from '../handler';
-import { ClouderaCopilot } from '../icons';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { useCollaboratorsContext } from '../contexts/collaborators-context';
 

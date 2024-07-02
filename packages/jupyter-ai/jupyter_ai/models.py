@@ -65,7 +65,7 @@ class AgentChatMessage(BaseModel):
     persona: Persona
     """
     The persona of the selected provider. If the selected provider is `None`,
-    this defaults to a description of `JupyternautPersona`.
+    this defaults to a description of `ClouderaCopilotPersona`.
     """
 
 

@@ -8,9 +8,9 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  IconButton,
   InputAdornment,
-  Typography
+  Typography,
+  Autocomplete
 } from '@mui/material';
 import {
   Download,
@@ -281,7 +281,7 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
             fullWidth
             variant="outlined"
             multiline
-            placeholder="Ask Jupyternaut"
+            placeholder="Ask Cloudera Copilot"
             onKeyDown={handleKeyDown}
             InputProps={{
               ...params.InputProps,

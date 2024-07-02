@@ -6,7 +6,7 @@ import types
 from dask.distributed import Client as DaskClient
 from importlib_metadata import entry_points
 from jupyter_ai.chat_handlers.learn import Retriever
-from jupyter_ai_magics import BaseProvider, JupyternautPersona
+from jupyter_ai_magics import BaseProvider, ClouderaCopilotPersona
 from jupyter_ai_magics.utils import get_em_providers, get_lm_providers
 from jupyter_server.extension.application import ExtensionApp
 from tornado.web import StaticFileHandler
@@ -35,9 +35,9 @@ from .handlers import (
     SlashCommandsInfoHandler,
 )
 
-JUPYTERNAUT_AVATAR_ROUTE = JupyternautPersona.avatar_route
-JUPYTERNAUT_AVATAR_PATH = str(
-    os.path.join(os.path.dirname(__file__), "static", "jupyternaut.svg")
+CLOUDERA_COPILOT_AVATAR_ROUTE = ClouderaCopilotPersona.avatar_route
+CLOUDERA_COPILOT_AVATAR_PATH = str(
+    os.path.join(os.path.dirname(__file__), "static", "cloudera-copilot.svg")
 )
 
 
@@ -56,9 +56,9 @@ class AiExtension(ExtensionApp):
         # the `()` at the end of the URL denotes an empty regex capture group,
         # required by Tornado.
         (
-            rf"{JUPYTERNAUT_AVATAR_ROUTE}()",
+            rf"{CLOUDERA_COPILOT_AVATAR_ROUTE}()",
             StaticFileHandler,
-            {"path": JUPYTERNAUT_AVATAR_PATH},
+            {"path": CLOUDERA_COPILOT_AVATAR_PATH},
         ),
     ]
 

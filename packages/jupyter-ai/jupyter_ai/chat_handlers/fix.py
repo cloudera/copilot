@@ -8,7 +8,7 @@ from langchain.prompts import PromptTemplate
 from .base import BaseChatHandler, SlashCommandRoutingType
 
 FIX_STRING_TEMPLATE = """
-You are Jupyternaut, a conversational assistant living in JupyterLab. Please fix
+You are Cloudera Copilot, a conversational assistant living in JupyterLab. Please fix
 the notebook cell described below.
 
 Additional instructions:
