@@ -5,7 +5,7 @@ from jupyter_ai.models import HumanChatMessage
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 from .base import BaseChatHandler, SlashCommandRoutingType
 
@@ -71,8 +71,9 @@ class AskChatHandler(BaseChatHandler):
         self.get_llm_chain()
 
         try:
-            result = await self.llm_chain.acall({"question": query})
-            response = result["answer"]
+            with self.pending("Searching learned documents"):
+                result = await self.llm_chain.acall({"question": query})
+                response = result["answer"]
             self.reply(response, message)
         except AssertionError as e:
             self.log.error(e)

@@ -8,7 +8,7 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import tornado
-from jupyter_ai.chat_handlers import BaseChatHandler
+from jupyter_ai.chat_handlers import BaseChatHandler, SlashCommandRoutingType
 from jupyter_ai.config_manager import ConfigManager, KeyEmptyError, WriteConflictError
 from jupyter_server.base.handlers import APIHandler as BaseAPIHandler
 from jupyter_server.base.handlers import JupyterHandler
@@ -16,19 +16,24 @@ from langchain.pydantic_v1 import ValidationError
 from tornado import web, websocket
 from tornado.web import HTTPError
 
-from .completions.models import InlineCompletionRequest
 from .models import (
     AgentChatMessage,
+    AgentStreamChunkMessage,
+    AgentStreamMessage,
     ChatClient,
     ChatHistory,
     ChatMessage,
     ChatRequest,
     ChatUser,
+    ClosePendingMessage,
     ConnectionMessage,
     HumanChatMessage,
     ListProvidersEntry,
     ListProvidersResponse,
+    ListSlashCommandsEntry,
+    ListSlashCommandsResponse,
     Message,
+    PendingMessage,
     UpdateConfigRequest,
 )
 
@@ -43,16 +48,18 @@ class ChatHistoryHandler(BaseAPIHandler):
     _messages = []
 
     @property
-    def chat_history(self):
+    def chat_history(self) -> List[ChatMessage]:
         return self.settings["chat_history"]
 
-    @chat_history.setter
-    def _chat_history_setter(self, new_history):
-        self.settings["chat_history"] = new_history
+    @property
+    def pending_messages(self) -> List[PendingMessage]:
+        return self.settings["pending_messages"]
 
     @tornado.web.authenticated
     async def get(self):
-        history = ChatHistory(messages=self.chat_history)
+        history = ChatHistory(
+            messages=self.chat_history, pending_messages=self.pending_messages
+        )
         self.finish(history.json())
 
 
@@ -88,9 +95,21 @@ class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):
     def chat_history(self) -> List[ChatMessage]:
         return self.settings["chat_history"]
 
+    @chat_history.setter
+    def chat_history(self, new_history):
+        self.settings["chat_history"] = new_history
+
     @property
     def loop(self) -> AbstractEventLoop:
         return self.settings["jai_event_loop"]
+
+    @property
+    def pending_messages(self) -> List[PendingMessage]:
+        return self.settings["pending_messages"]
+
+    @pending_messages.setter
+    def pending_messages(self, new_pending_messages):
+        self.settings["pending_messages"] = new_pending_messages
 
     def initialize(self):
         self.log.debug("Initializing websocket connection %s", self.request.path)
@@ -167,7 +186,14 @@ class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self.root_chat_handlers[client_id] = self
         self.chat_clients[client_id] = ChatClient(**current_user, id=client_id)
         self.client_id = client_id
-        self.write_message(ConnectionMessage(client_id=client_id).dict())
+        self.write_message(
+            ConnectionMessage(
+                client_id=client_id,
+                history=ChatHistory(
+                    messages=self.chat_history, pending_messages=self.pending_messages
+                ),
+            ).dict()
+        )
 
         self.log.info(f"Client connected. ID: {client_id}")
         self.log.debug("Clients are : %s", self.root_chat_handlers.keys())
@@ -185,11 +211,32 @@ class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):
             if client:
                 client.write_message(message.dict())
 
-        # Only append ChatMessage instances to history, not control messages
-        if isinstance(message, HumanChatMessage) or isinstance(
-            message, AgentChatMessage
+        # append all messages of type `ChatMessage` directly to the chat history
+        if isinstance(
+            message, (HumanChatMessage, AgentChatMessage, AgentStreamMessage)
         ):
             self.chat_history.append(message)
+        elif isinstance(message, AgentStreamChunkMessage):
+            # for stream chunks, modify the corresponding `AgentStreamMessage`
+            # by appending its content and potentially marking it as complete.
+            chunk: AgentStreamChunkMessage = message
+
+            # iterate backwards from the end of the list
+            for history_message in self.chat_history[::-1]:
+                if (
+                    history_message.type == "agent-stream"
+                    and history_message.id == chunk.id
+                ):
+                    stream_message: AgentStreamMessage = history_message
+                    stream_message.body += chunk.content
+                    stream_message.complete = chunk.stream_complete
+                    break
+        elif isinstance(message, PendingMessage):
+            self.pending_messages.append(message)
+        elif isinstance(message, ClosePendingMessage):
+            self.pending_messages = list(
+                filter(lambda m: m.id != message.id, self.pending_messages)
+            )
 
     async def on_message(self, message):
         self.log.debug("Message received: %s", message)
@@ -207,6 +254,7 @@ class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):
             id=chat_message_id,
             time=time.time(),
             body=chat_request.prompt,
+            selection=chat_request.selection,
             client=self.chat_client,
         )
 
@@ -290,7 +338,13 @@ class ProviderHandler(BaseAPIHandler):
 
         # filter out every model w/ model ID according to allow/blocklist
         for provider in providers:
-            provider.models = list(filter(filter_predicate, provider.models))
+            provider.models = list(filter(filter_predicate, provider.models or []))
+            provider.chat_models = list(
+                filter(filter_predicate, provider.chat_models or [])
+            )
+            provider.completion_models = list(
+                filter(filter_predicate, provider.completion_models or [])
+            )
 
         # filter out every provider with no models which satisfy the allow/blocklist, then return
         return filter((lambda p: len(p.models) > 0), providers)
@@ -343,7 +397,7 @@ class ModelProviderHandler(ProviderHandler):
                 ListProvidersEntry(
                     id=provider.id,
                     name=provider.name,
-                    models=enabled_models,
+                    models=provider.models,
                     help=provider.help,
                     auth_strategy=provider.auth_strategy,
                     registry=provider.registry,
@@ -464,3 +518,52 @@ class ApiKeysHandler(BaseAPIHandler):
             self.config_manager.delete_api_key(api_key_name)
         except Exception as e:
             raise HTTPError(500, str(e))
+
+
+class SlashCommandsInfoHandler(BaseAPIHandler):
+    """List slash commands that are currently available to the user."""
+
+    @property
+    def config_manager(self) -> ConfigManager:
+        return self.settings["jai_config_manager"]
+
+    @property
+    def chat_handlers(self) -> Dict[str, "BaseChatHandler"]:
+        return self.settings["jai_chat_handlers"]
+
+    @web.authenticated
+    def get(self):
+        response = ListSlashCommandsResponse()
+
+        # if no selected LLM, return an empty response
+        if not self.config_manager.lm_provider:
+            self.finish(response.json())
+            return
+
+        for id, chat_handler in self.chat_handlers.items():
+            # filter out any chat handler that is not a slash command
+            if (
+                id == "default"
+                or chat_handler.routing_type.routing_method != "slash_command"
+            ):
+                continue
+
+            # hint the type of this attribute
+            routing_type: SlashCommandRoutingType = chat_handler.routing_type
+
+            # filter out any chat handler that is unsupported by the current LLM
+            if (
+                "/" + routing_type.slash_id
+                in self.config_manager.lm_provider.unsupported_slash_commands
+            ):
+                continue
+
+            response.slash_commands.append(
+                ListSlashCommandsEntry(
+                    slash_id=routing_type.slash_id, description=chat_handler.help
+                )
+            )
+
+        # sort slash commands by slash id and deliver the response
+        response.slash_commands.sort(key=lambda sc: sc.slash_id)
+        self.finish(response.json())

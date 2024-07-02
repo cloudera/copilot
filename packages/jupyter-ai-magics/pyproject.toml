@@ -36,44 +36,47 @@ test = ["coverage", "pytest", "pytest-asyncio", "pytest-cov"]
 
 all = [
     "ai21",
-    "anthropic~=0.3.0",
-    "cohere>4.40,<5",
     "gpt4all",
     "huggingface_hub",
     "ipywidgets",
+    "langchain_anthropic",
+    "langchain_cohere",
+    "langchain_google_genai",
+    "langchain_mistralai",
     "langchain_nvidia_ai_endpoints",
+    "langchain_openai",
     "pillow",
-    "openai~=1.6.1",
     "boto3",
     "qianfan",
     "together",
-    "langchain-google-genai",
 ]
 
 [project.entry-points."jupyter_ai.model_providers"]
 ai21 = "jupyter_ai_magics:AI21Provider"
-anthropic = "jupyter_ai_magics:AnthropicProvider"
-cohere = "jupyter_ai_magics:CohereProvider"
+anthropic = "jupyter_ai_magics.partner_providers.anthropic:AnthropicProvider"
+anthropic-chat = "jupyter_ai_magics.partner_providers.anthropic:ChatAnthropicProvider"
+cohere = "jupyter_ai_magics.partner_providers.cohere:CohereProvider"
 gpt4all = "jupyter_ai_magics:GPT4AllProvider"
 huggingface_hub = "jupyter_ai_magics:HfHubProvider"
-openai = "jupyter_ai_magics:OpenAIProvider"
-openai-chat = "jupyter_ai_magics:ChatOpenAIProvider"
-azure-chat-openai = "jupyter_ai_magics:AzureChatOpenAIProvider"
+openai = "jupyter_ai_magics.partner_providers.openai:OpenAIProvider"
+openai-chat = "jupyter_ai_magics.partner_providers.openai:ChatOpenAIProvider"
+azure-chat-openai = "jupyter_ai_magics.partner_providers.openai:AzureChatOpenAIProvider"
 sagemaker-endpoint = "jupyter_ai_magics:SmEndpointProvider"
 amazon-bedrock = "jupyter_ai_magics:BedrockProvider"
-anthropic-chat = "jupyter_ai_magics:ChatAnthropicProvider"
 amazon-bedrock-chat = "jupyter_ai_magics:BedrockChatProvider"
 qianfan = "jupyter_ai_magics:QianfanProvider"
 nvidia-chat = "jupyter_ai_magics.partner_providers.nvidia:ChatNVIDIAProvider"
 together-ai = "jupyter_ai_magics:TogetherAIProvider"
 gemini = "jupyter_ai_magics.partner_providers.gemini:GeminiProvider"
+mistralai = "jupyter_ai_magics.partner_providers.mistralai:MistralAIProvider"
 
 [project.entry-points."jupyter_ai.embeddings_model_providers"]
 bedrock = "jupyter_ai_magics:BedrockEmbeddingsProvider"
-cohere = "jupyter_ai_magics:CohereEmbeddingsProvider"
+cohere = "jupyter_ai_magics.partner_providers.cohere:CohereEmbeddingsProvider"
+mistralai = "jupyter_ai_magics.partner_providers.mistralai:MistralAIEmbeddingsProvider"
 gpt4all = "jupyter_ai_magics:GPT4AllEmbeddingsProvider"
 huggingface_hub = "jupyter_ai_magics:HfHubEmbeddingsProvider"
-openai = "jupyter_ai_magics:OpenAIEmbeddingsProvider"
+openai = "jupyter_ai_magics.partner_providers.openai:OpenAIEmbeddingsProvider"
 qianfan = "jupyter_ai_magics:QianfanEmbeddingsEndpointProvider"
 
 [tool.hatch.version]

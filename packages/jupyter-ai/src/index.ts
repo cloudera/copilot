@@ -18,7 +18,9 @@ import { ChatHandler } from './chat_handler';
 import { buildErrorWidget } from './widgets/chat-error';
 import { completionPlugin } from './completions';
 import { statusItemPlugin } from './status';
+import { IJaiCompletionProvider } from './tokens';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { ActiveCellManager } from './contexts/active-cell-context';
 
 export type DocumentTracker = IWidgetTracker<IDocumentWidget>;
 
@@ -28,14 +30,20 @@ export type DocumentTracker = IWidgetTracker<IDocumentWidget>;
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyter_ai:plugin',
   autoStart: true,
-  optional: [IGlobalAwareness, ILayoutRestorer, IThemeManager],
+  optional: [
+    IGlobalAwareness,
+    ILayoutRestorer,
+    IThemeManager,
+    IJaiCompletionProvider
+  ],
   requires: [IRenderMimeRegistry],
   activate: async (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
     globalAwareness: Awareness | null,
     restorer: ILayoutRestorer | null,
-    themeManager: IThemeManager | null
+    themeManager: IThemeManager | null,
+    completionProvider: IJaiCompletionProvider | null
   ) => {
     /**
      * Initialize selection watcher singleton
@@ -43,9 +51,20 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const selectionWatcher = new SelectionWatcher(app.shell);
 
     /**
+     * Initialize active cell manager singleton
+     */
+    const activeCellManager = new ActiveCellManager(app.shell);
+
+    /**
      * Initialize chat handler, open WS connection
      */
     const chatHandler = new ChatHandler();
+
+    const openInlineCompleterSettings = () => {
+      app.commands.execute('settingeditor:open', {
+        query: 'Inline Completer'
+      });
+    };
 
     let chatWidget: ReactWidget | null = null;
     try {
@@ -55,7 +74,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
         chatHandler,
         globalAwareness,
         themeManager,
-        rmRegistry
+        rmRegistry,
+        completionProvider,
+        openInlineCompleterSettings,
+        activeCellManager
       );
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);

@@ -1,17 +1,75 @@
 import hashlib
 import itertools
 import os
+import tarfile
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
 import dask
 from langchain.schema import Document
 from langchain.text_splitter import TextSplitter
+from langchain_community.document_loaders import PyPDFLoader
+
+
+def arxiv_to_text(id: str, output_dir: str) -> str:
+    """Downloads and extracts single tar file from arXiv.
+    Combines the TeX components into a single file.
+
+    Parameters
+    ----------
+    id : str
+        id for the paper, numbers after "arXiv" in arXiv:xxxx.xxxxx
+
+    output_dir : str
+        directory to save the output file
+
+    Returns
+    -------
+    output: str
+        output path to the downloaded TeX file
+    """
+
+    import arxiv
+
+    outfile = f"{id}-{datetime.now():%Y-%m-%d-%H-%M}.tex"
+    download_filename = "downloaded-paper.tar.gz"
+    output_path = os.path.join(output_dir, outfile)
+
+    paper = next(arxiv.Client().results(arxiv.Search(id_list=[id])))
+    paper.download_source(filename=download_filename)
+
+    with tarfile.open(download_filename) as tar:
+        tex_list = []
+        for member in tar:
+            if member.isfile() and member.name.lower().endswith(".tex"):
+                tex_list.append(member.name)
+                tar.extract(member, path="")
+
+    with open(output_path, "w") as w:
+        for f in tex_list:
+            with open(f) as tex:
+                w.write(tex.read())
+            os.remove(f)
+
+    os.remove(download_filename)
+
+    return output_path
+
+
+# Uses pypdf which is used by PyPDFLoader from langchain
+def pdf_to_text(path):
+    pages = PyPDFLoader(path)
+    text = "\n \n".join([page.page_content for page in pages.load_and_split()])
+    return text
 
 
 def path_to_doc(path):
     with open(str(path)) as f:
-        text = f.read()
+        if os.path.splitext(path)[1].lower() == ".pdf":
+            text = pdf_to_text(path)
+        else:
+            text = f.read()
         m = hashlib.sha256()
         m.update(text.encode("utf-8"))
         metadata = {"path": str(path), "sha256": m.digest(), "extension": path.suffix}
@@ -37,6 +95,9 @@ SUPPORTED_EXTS = {
     ".jsx",
     ".tsx",
     ".txt",
+    ".html",
+    ".pdf",
+    ".tex",  # added for raw latex files from arxiv
 }
 
 
@@ -48,25 +109,40 @@ def flatten(*chunk_lists):
     return list(itertools.chain(*chunk_lists))
 
 
+def collect_filepaths(path, all_files: bool):
+    """Selects eligible files, i.e.,
+    1. Files not in excluded directories, and
+    2. Files that are in the valid file extensions list
+    Called from the `split` function.
+    Returns all the filepaths to eligible files.
+    """
+    # Check if the path points to a single file
+    if os.path.isfile(path):
+        filepaths = [Path(path)]
+    else:
+        filepaths = []
+        for dir, subdirs, filenames in os.walk(path):
+            # Filter out hidden filenames, hidden directories, and excluded directories,
+            # unless "all files" are requested
+            if not all_files:
+                subdirs[:] = [
+                    d for d in subdirs if not (d[0] == "." or d in EXCLUDE_DIRS)
+                ]
+                filenames = [f for f in filenames if not f[0] == "."]
+            filepaths.extend([Path(dir) / filename for filename in filenames])
+    valid_exts = {j.lower() for j in SUPPORTED_EXTS}
+    filepaths = [fp for fp in filepaths if fp.suffix.lower() in valid_exts]
+    return filepaths
+
+
 def split(path, all_files: bool, splitter):
+    """Splits files into chunks for vector db in RAG"""
     chunks = []
-
-    for dir, subdirs, filenames in os.walk(path):
-        # Filter out hidden filenames, hidden directories, and excluded directories,
-        # unless "all files" are requested
-        if not all_files:
-            subdirs[:] = [d for d in subdirs if not (d[0] == "." or d in EXCLUDE_DIRS)]
-            filenames = [f for f in filenames if not f[0] == "."]
-
-        for filename in filenames:
-            filepath = Path(os.path.join(dir, filename))
-            if filepath.suffix not in SUPPORTED_EXTS:
-                continue
-
-            document = dask.delayed(path_to_doc)(filepath)
-            chunk = dask.delayed(split_document)(document, splitter)
-            chunks.append(chunk)
-
+    filepaths = collect_filepaths(path, all_files)
+    for filepath in filepaths:
+        document = dask.delayed(path_to_doc)(filepath)
+        chunk = dask.delayed(split_document)(document, splitter)
+        chunks.append(chunk)
     flattened_chunks = dask.delayed(flatten)(*chunks)
     return flattened_chunks
 

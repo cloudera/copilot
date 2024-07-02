@@ -10,7 +10,7 @@ in JupyterLab and the Jupyter Notebook. More specifically, Jupyter AI offers:
   This works anywhere the IPython kernel runs (JupyterLab, Jupyter Notebook, Google Colab, Kaggle, VSCode, etc.).
 * A native chat UI in JupyterLab that enables you to work with generative AI as a conversational assistant.
 * Support for a wide range of generative model providers, including AI21, Anthropic, AWS, Cohere,
-  Gemini, Hugging Face, NVIDIA, and OpenAI.
+  Gemini, Hugging Face, MistralAI, NVIDIA, and OpenAI.
 * Local model support through GPT4All, enabling use of generative AI models on consumer grade machines
   with ease and privacy.
 
@@ -23,9 +23,12 @@ Documentation is available on [ReadTheDocs](https://jupyter-ai.readthedocs.io/en
 You will need to have installed the following software to use Jupyter AI:
 
 - Python 3.8 - 3.11
-- JupyterLab 4
+- JupyterLab 4 or Notebook 7
 
 In addition, you will need access to at least one model provider.
+
+> [!IMPORTANT]
+> JupyterLab 3 reached its end of maintenance date on May 15, 2024. As a result, we will not backport new features to the v1 branch supporting JupyterLab 3. Fixes for critical issues will still be backported until December 31, 2024. If you are still using JupyterLab 3, we strongly encourage you to **upgrade to JupyterLab 4 as soon as possible**. For more information, see [JupyterLab 3 end of maintenance](https://blog.jupyter.org/jupyterlab-3-end-of-maintenance-879778927db2) on the Jupyter Blog.
 
 ## Setting Up Model Providers in a Notebook
 

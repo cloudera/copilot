@@ -24,6 +24,11 @@ JupyterLab, depends on JupyterLab 4. If upgrading to JupyterLab 4 is not
 possible in your environment, you should install `jupyter_ai` v1.x instead.
 See "Installation" for more details.
 
+:::{attention}
+:name: jupyter-lab-3-end-of-maintenance
+JupyterLab 3 reached its end of maintenance date on May 15, 2024. As a result, we will not backport new features to the v1 branch supporting JupyterLab 3. Fixes for critical issues will still be backported until December 31, 2024. If you are still using JupyterLab 3, we strongly encourage you to **upgrade to JupyterLab 4 as soon as possible**. For more information, see [JupyterLab 3 end of maintenance](https://blog.jupyter.org/jupyterlab-3-end-of-maintenance-879778927db2) on the Jupyter Blog.
+:::
+
 You can install JupyterLab using `pip` or `conda`.
 
 1. via `pip`:
@@ -41,6 +46,23 @@ conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda install jupyterlab~=4.0
 ```
+
+You can also use Jupyter AI in Jupyter Notebook 7.2+. To install Jupyter Notebook 7.2:
+
+1. via `pip`:
+
+```
+pip install notebook~=7.2
+```
+
+2. via `conda`:
+```
+conda install notebook~=7.2
+```
+
+:::{note}
+To activate the chat interface in Jupyter Notebook, click on "View > Left sidebar > Show Jupyter AI Chat".
+:::
 
 The `jupyter_ai_magics` package, which provides exclusively the IPython magics,
 does not depend on JupyterLab or `jupyter_ai`. You can install
@@ -134,18 +156,19 @@ Jupyter AI supports the following model providers:
 | Provider            | Provider ID          | Environment variable(s)    | Python package(s)               |
 |---------------------|----------------------|----------------------------|---------------------------------|
 | AI21                | `ai21`               | `AI21_API_KEY`             | `ai21`                          |
-| Anthropic           | `anthropic`          | `ANTHROPIC_API_KEY`        | `anthropic`                     |
-| Anthropic (chat)    | `anthropic-chat`     | `ANTHROPIC_API_KEY`        | `anthropic`                     |
+| Anthropic           | `anthropic`          | `ANTHROPIC_API_KEY`        | `langchain-anthropic`           |
+| Anthropic (chat)    | `anthropic-chat`     | `ANTHROPIC_API_KEY`        | `langchain-anthropic`           |
 | Bedrock             | `bedrock`            | N/A                        | `boto3`                         |
 | Bedrock (chat)      | `bedrock-chat`       | N/A                        | `boto3`                         |
-| Cohere              | `cohere`             | `COHERE_API_KEY`           | `cohere`                        |
+| Cohere              | `cohere`             | `COHERE_API_KEY`           | `langchain_cohere`              |
 | ERNIE-Bot           | `qianfan`            | `QIANFAN_AK`, `QIANFAN_SK` | `qianfan`                       |
 | Gemini              | `gemini`             | `GOOGLE_API_KEY`           | `langchain-google-genai`        |
 | GPT4All             | `gpt4all`            | N/A                        | `gpt4all`                       |
 | Hugging Face Hub    | `huggingface_hub`    | `HUGGINGFACEHUB_API_TOKEN` | `huggingface_hub`, `ipywidgets`, `pillow` |
+| MistralAI           | `mistralai`          | `MISTRAL_API_KEY`          | `langchain-mistralai`           |
 | NVIDIA              | `nvidia-chat`        | `NVIDIA_API_KEY`           | `langchain_nvidia_ai_endpoints` |
-| OpenAI              | `openai`             | `OPENAI_API_KEY`           | `openai`                        |
-| OpenAI (chat)       | `openai-chat`        | `OPENAI_API_KEY`           | `openai`                        |
+| OpenAI              | `openai`             | `OPENAI_API_KEY`           | `langchain-openai`              |
+| OpenAI (chat)       | `openai-chat`        | `OPENAI_API_KEY`           | `langchain-openai`              |
 | SageMaker           | `sagemaker-endpoint` | N/A                        | `boto3`                         |
 
 The environment variable names shown above are also the names of the settings keys used when setting up the chat interface.
@@ -458,6 +481,68 @@ use the `-a` or `--all-files` option.
 # learn from all supported files
 /learn -a <directory>
 ```
+
+#### Supported files for the learn command
+
+Jupyter AI can only learn from files with the following file extensions:
+
+* .py
+* .md
+* .R
+* .Rmd
+* .jl
+* .sh
+* .ipynb
+* .js
+* .ts
+* .jsx
+* .tsx
+* .txt
+* .html
+* .pdf
+* .tex
+
+### Learning arXiv files
+
+The `/learn` command also provides downloading and processing papers from the [arXiv](https://arxiv.org/) repository. You will need to install the `arxiv` python package for this feature to work. Run `pip install arxiv` to install the `arxiv` package.
+
+```
+/learn -r arxiv 2404.18558
+```
+
+### Exporting chat history
+Use the `/export` command to export the chat history from the current session to a markdown file named `chat_history-YYYY-MM-DD-HH-mm-ss.md`. You can also specify a filename using `/export <file_name>`. Each export will include the entire chat history up to that point in the session.
+
+
+### Fixing a code cell with an error
+
+The `/fix` command can be used to fix any code cell with an error output in a
+Jupyter notebook file. To start, type `/fix` into the chat input. Jupyter AI
+will then prompt you to select a cell with error output before sending the
+request.
+
+<img src="../_static/fix-no-error-cell-selected.png"
+    alt='Screenshot of the chat input containing `/fix` without a code cell with error output selected.'
+    class="screenshot" />
+
+Then click on a code cell with error output. A blue bar should appear
+immediately to the left of the code cell.
+
+<img src="../_static/fix-error-cell-selected.png"
+    alt='Screenshot of a code cell with error output selected.'
+    class="screenshot" />
+
+After this, the Send button to the right of the chat input will be enabled, and
+you can use your mouse or keyboard to send `/fix` to Jupyternaut. The code cell
+and its associated error output are included in the message automatically. When
+complete, Jupyternaut will reply with suggested code that should fix the error.
+You can use the action toolbar under each code block to quickly replace the
+contents of the failing cell.
+
+<img src="../_static/fix-response.png"
+    alt='Screenshot of a response from `/fix`, with the "Replace active cell" action hovered.'
+    class="screenshot" style="max-width:65%" />
+
 
 ### Additional chat commands
 

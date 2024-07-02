@@ -10,10 +10,8 @@ from jupyter_ai_magics.providers import (
 from langchain.pydantic_v1 import BaseModel, Extra
 from langchain_community.embeddings import (
     BedrockEmbeddings,
-    CohereEmbeddings,
     GPT4AllEmbeddings,
     HuggingFaceHubEmbeddings,
-    OpenAIEmbeddings,
     QianfanEmbeddingsEndpoint,
 )
 
@@ -68,36 +66,6 @@ class BaseEmbeddingsProvider(BaseModel):
         super().__init__(*args, **kwargs, **model_kwargs)
 
 
-class OpenAIEmbeddingsProvider(BaseEmbeddingsProvider, OpenAIEmbeddings):
-    id = "openai"
-    name = "OpenAI"
-    models = [
-        "text-embedding-ada-002",
-        "text-embedding-3-small",
-        "text-embedding-3-large",
-    ]
-    model_id_key = "model"
-    pypi_package_deps = ["openai"]
-    auth_strategy = EnvAuthStrategy(name="OPENAI_API_KEY")
-
-
-class CohereEmbeddingsProvider(BaseEmbeddingsProvider, CohereEmbeddings):
-    id = "cohere"
-    name = "Cohere"
-    models = [
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-        "embed-english-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-multilingual-light-v3.0",
-    ]
-    model_id_key = "model"
-    pypi_package_deps = ["cohere"]
-    auth_strategy = EnvAuthStrategy(name="COHERE_API_KEY")
-
-
 class HfHubEmbeddingsProvider(BaseEmbeddingsProvider, HuggingFaceHubEmbeddings):
     id = "huggingface_hub"
     name = "Hugging Face Hub"
@@ -111,10 +79,11 @@ class HfHubEmbeddingsProvider(BaseEmbeddingsProvider, HuggingFaceHubEmbeddings):
     registry = True
 
 
+# See model ID list here: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html
 class BedrockEmbeddingsProvider(BaseEmbeddingsProvider, BedrockEmbeddings):
     id = "bedrock"
     name = "Bedrock"
-    models = ["amazon.titan-embed-text-v1"]
+    models = ["amazon.titan-embed-text-v1", "amazon.titan-embed-text-v2:0"]
     model_id_key = "model_id"
     pypi_package_deps = ["boto3"]
     auth_strategy = AwsAuthStrategy()

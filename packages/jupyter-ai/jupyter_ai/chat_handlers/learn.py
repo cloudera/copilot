@@ -4,7 +4,7 @@ import os
 from typing import Any, Coroutine, List, Optional, Tuple
 
 from dask.distributed import Client as DaskClient
-from jupyter_ai.document_loaders.directory import get_embeddings, split
+from jupyter_ai.document_loaders.directory import arxiv_to_text, get_embeddings, split
 from jupyter_ai.document_loaders.splitter import ExtensionSplitter, NotebookSplitter
 from jupyter_ai.models import (
     DEFAULT_CHUNK_OVERLAP,
@@ -45,6 +45,9 @@ class LearnChatHandler(BaseChatHandler):
         self.parser.add_argument("-d", "--delete", action="store_true")
         self.parser.add_argument("-l", "--list", action="store_true")
         self.parser.add_argument(
+            "-r", "--remote", action="store", default=None, type=str
+        )
+        self.parser.add_argument(
             "-c", "--chunk-size", action="store", default=DEFAULT_CHUNK_SIZE, type=int
         )
         self.parser.add_argument(
@@ -67,17 +70,26 @@ class LearnChatHandler(BaseChatHandler):
 
     def _load(self):
         """Loads the vector store."""
-        embeddings = self.get_embedding_model()
-        if not embeddings:
+        if self.index is not None:
             return
-        if self.index is None:
-            try:
-                self.index = FAISS.load_local(
-                    INDEX_SAVE_DIR, embeddings, index_name=self.index_name
-                )
-                self.load_metadata()
-            except Exception as e:
-                self.log.error("Could not load vector index from disk.")
+
+        try:
+            embeddings = self.get_embedding_model()
+            if not embeddings:
+                return
+
+            self.index = FAISS.load_local(
+                INDEX_SAVE_DIR,
+                embeddings,
+                index_name=self.index_name,
+                allow_dangerous_deserialization=True,
+            )
+            self.load_metadata()
+        except Exception as e:
+            self.log.error(
+                "Could not load vector index from disk. Full exception details printed below."
+            )
+            self.log.error(e)
 
     async def process_message(self, message: HumanChatMessage):
         # If no embedding provider has been selected
@@ -101,6 +113,30 @@ class LearnChatHandler(BaseChatHandler):
             self.reply(self._build_list_response())
             return
 
+        if args.remote:
+            remote_type = args.remote.lower()
+            if remote_type == "arxiv":
+                try:
+                    id = args.path[0]
+                    args.path = [arxiv_to_text(id, self.root_dir)]
+                    self.reply(
+                        f"Learning arxiv file with id **{id}**, saved in **{args.path[0]}**.",
+                        message,
+                    )
+                except ModuleNotFoundError as e:
+                    self.log.error(e)
+                    self.reply(
+                        "No `arxiv` package found. " "Install with `pip install arxiv`."
+                    )
+                    return
+                except Exception as e:
+                    self.log.error(e)
+                    self.reply(
+                        "An error occurred while processing the arXiv file. "
+                        f"Please verify that the arxiv id {id} is correct."
+                    )
+                    return
+
         # Make sure the path exists.
         if not len(args.path) == 1:
             self.reply(f"{self.parser.format_usage()}", message)
@@ -115,16 +151,17 @@ class LearnChatHandler(BaseChatHandler):
         # delete and relearn index if embedding model was changed
         await self.delete_and_relearn()
 
-        if args.verbose:
-            self.reply(f"Loading and splitting files for {load_path}", message)
-
-        await self.learn_dir(
-            load_path, args.chunk_size, args.chunk_overlap, args.all_files
-        )
-        self.save()
-
-        response = f"""🎉 I have learned documents at **{load_path}** and I am ready to answer questions about them.
-        You can ask questions about these docs by prefixing your message with **/ask**."""
+        with self.pending(f"Loading and splitting files for {load_path}"):
+            try:
+                await self.learn_dir(
+                    load_path, args.chunk_size, args.chunk_overlap, args.all_files
+                )
+            except Exception as e:
+                response = f"""Learn documents in **{load_path}** failed. {str(e)}."""
+            else:
+                self.save()
+                response = f"""🎉 I have learned documents at **{load_path}** and I am ready to answer questions about them.
+                    You can ask questions about these docs by prefixing your message with **/ask**."""
         self.reply(response, message)
 
     def _build_list_response(self):
@@ -155,7 +192,6 @@ class LearnChatHandler(BaseChatHandler):
 
         delayed = split(path, all_files, splitter=splitter)
         doc_chunks = await dask_client.compute(delayed)
-
         em_provider_cls, em_provider_args = self.get_embedding_provider()
         delayed = get_embeddings(doc_chunks, em_provider_cls, em_provider_args)
         embedding_records = await dask_client.compute(delayed)

@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import os
 import time
 import traceback
@@ -11,12 +12,20 @@ from typing import (
     Literal,
     Optional,
     Type,
+    Union,
 )
 from uuid import uuid4
 
 from dask.distributed import Client as DaskClient
 from jupyter_ai.config_manager import ConfigManager, Logger
-from jupyter_ai.models import AgentChatMessage, ChatMessage, HumanChatMessage
+from jupyter_ai.models import (
+    AgentChatMessage,
+    ChatMessage,
+    ClosePendingMessage,
+    HumanChatMessage,
+    PendingMessage,
+)
+from jupyter_ai_magics import Persona
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.pydantic_v1 import BaseModel
 
@@ -26,7 +35,7 @@ if TYPE_CHECKING:
 
 # Chat handler type, with specific attributes for each
 class HandlerRoutingType(BaseModel):
-    routing_method: ClassVar[str] = Literal["slash_command"]
+    routing_method: ClassVar[Union[Literal["slash_command"]]] = ...
     """The routing method that sends commands to this handler."""
 
 
@@ -94,10 +103,21 @@ class BaseChatHandler:
         `self.handle_exc()` when an exception is raised. This method is called
         by RootChatHandler when it routes a human message to this chat handler.
         """
+        lm_provider_klass = self.config_manager.lm_provider
+
+        # ensure the current slash command is supported
+        if self.routing_type.routing_method == "slash_command":
+            slash_command = (
+                "/" + self.routing_type.slash_id if self.routing_type.slash_id else ""
+            )
+            if slash_command in lm_provider_klass.unsupported_slash_commands:
+                self.reply(
+                    "Sorry, the selected language model does not support this slash command."
+                )
+                return
 
         # check whether the configured LLM can support a request at this time.
         if self.uses_llm and BaseChatHandler._requests_count > 0:
-            lm_provider_klass = self.config_manager.lm_provider
             lm_provider_params = self.config_manager.lm_provider_params
             lm_provider = lm_provider_klass(**lm_provider_params)
 
@@ -159,11 +179,16 @@ class BaseChatHandler:
         self.reply(response, message)
 
     def reply(self, response: str, human_msg: Optional[HumanChatMessage] = None):
+        """
+        Sends an agent message, usually in response to a received
+        `HumanChatMessage`.
+        """
         agent_msg = AgentChatMessage(
             id=uuid4().hex,
             time=time.time(),
             body=response,
             reply_to=human_msg.id if human_msg else "",
+            persona=self.persona,
         )
 
         for handler in self._root_chat_handlers.values():
@@ -172,6 +197,61 @@ class BaseChatHandler:
 
             handler.broadcast_message(agent_msg)
             break
+
+    @property
+    def persona(self):
+        return self.config_manager.persona
+
+    def start_pending(self, text: str, ellipsis: bool = True) -> PendingMessage:
+        """
+        Sends a pending message to the client.
+
+        Returns the pending message ID.
+        """
+        persona = self.config_manager.persona
+
+        pending_msg = PendingMessage(
+            id=uuid4().hex,
+            time=time.time(),
+            body=text,
+            persona=Persona(name=persona.name, avatar_route=persona.avatar_route),
+            ellipsis=ellipsis,
+        )
+
+        for handler in self._root_chat_handlers.values():
+            if not handler:
+                continue
+
+            handler.broadcast_message(pending_msg)
+            break
+        return pending_msg
+
+    def close_pending(self, pending_msg: PendingMessage):
+        """
+        Closes a pending message.
+        """
+        close_pending_msg = ClosePendingMessage(
+            id=pending_msg.id,
+        )
+
+        for handler in self._root_chat_handlers.values():
+            if not handler:
+                continue
+
+            handler.broadcast_message(close_pending_msg)
+            break
+
+    @contextlib.contextmanager
+    def pending(self, text: str, ellipsis: bool = True):
+        """
+        Context manager that sends a pending message to the client, and closes
+        it after the block is executed.
+        """
+        pending_msg = self.start_pending(text, ellipsis=ellipsis)
+        try:
+            yield
+        finally:
+            self.close_pending(pending_msg)
 
     def get_llm_chain(self):
         lm_provider = self.config_manager.lm_provider

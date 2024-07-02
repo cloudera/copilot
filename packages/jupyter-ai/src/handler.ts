@@ -51,8 +51,23 @@ export namespace AiService {
     serverSettings?: ServerConnection.ISettings;
   }
 
+  export type CellError = {
+    name: string;
+    value: string;
+    traceback: string[];
+  };
+
+  export type CellWithErrorSelection = {
+    type: 'cell-with-error';
+    source: string;
+    error: CellError;
+  };
+
+  export type Selection = CellWithErrorSelection;
+
   export type ChatRequest = {
     prompt: string;
+    selection?: Selection;
   };
 
   export type Collaborator = {
@@ -68,12 +83,18 @@ export namespace AiService {
     id: string;
   };
 
+  export type Persona = {
+    name: string;
+    avatar_route: string;
+  };
+
   export type AgentChatMessage = {
     type: 'agent';
     id: string;
     time: number;
     body: string;
     reply_to: string;
+    persona: Persona;
   };
 
   export type HumanChatMessage = {
@@ -82,26 +103,63 @@ export namespace AiService {
     time: number;
     body: string;
     client: ChatClient;
+    selection?: Selection;
   };
 
   export type ConnectionMessage = {
     type: 'connection';
     client_id: string;
+    history: ChatHistory;
   };
 
   export type ClearMessage = {
     type: 'clear';
   };
 
-  export type ChatMessage = AgentChatMessage | HumanChatMessage;
+  export type PendingMessage = {
+    type: 'pending';
+    id: string;
+    time: number;
+    body: string;
+    persona: Persona;
+    ellipsis: boolean;
+  };
+
+  export type ClosePendingMessage = {
+    type: 'close-pending';
+    id: string;
+  };
+
+  export type AgentStreamMessage = Omit<AgentChatMessage, 'type'> & {
+    type: 'agent-stream';
+    complete: boolean;
+  };
+
+  export type AgentStreamChunkMessage = {
+    type: 'agent-stream-chunk';
+    id: string;
+    content: string;
+    stream_complete: boolean;
+  };
+
+  export type ChatMessage =
+    | AgentChatMessage
+    | HumanChatMessage
+    | AgentStreamMessage;
+
   export type Message =
     | AgentChatMessage
     | HumanChatMessage
     | ConnectionMessage
-    | ClearMessage;
+    | ClearMessage
+    | PendingMessage
+    | ClosePendingMessage
+    | AgentStreamMessage
+    | AgentStreamChunkMessage;
 
   export type ChatHistory = {
     messages: ChatMessage[];
+    pending_messages: PendingMessage[];
   };
 
   export type DescribeConfigResponse = {
@@ -111,6 +169,7 @@ export namespace AiService {
     send_with_shift_enter: boolean;
     fields: Record<string, Record<string, any>>;
     last_read: number;
+    completions_model_provider_id: string | null;
   };
 
   export type UpdateConfigRequest = {
@@ -120,6 +179,8 @@ export namespace AiService {
     send_with_shift_enter?: boolean;
     fields?: Record<string, Record<string, any>>;
     last_read?: number;
+    completions_model_provider_id?: string | null;
+    completions_fields?: Record<string, Record<string, any>>;
   };
 
   export async function getConfig(): Promise<DescribeConfigResponse> {
@@ -176,6 +237,8 @@ export namespace AiService {
     help?: string;
     auth_strategy: AuthStrategy;
     registry: boolean;
+    completion_models: string[];
+    chat_models: string[];
     fields: Field[];
   };
 
@@ -204,5 +267,18 @@ export namespace AiService {
     return requestAPI<void>(`api_keys/${keyName}`, {
       method: 'DELETE'
     });
+  }
+
+  export type ListSlashCommandsEntry = {
+    slash_id: string;
+    description: string;
+  };
+
+  export type ListSlashCommandsResponse = {
+    slash_commands: ListSlashCommandsEntry[];
+  };
+
+  export async function listSlashCommands(): Promise<ListSlashCommandsResponse> {
+    return requestAPI<ListSlashCommandsResponse>('chats/slash_commands');
   }
 }

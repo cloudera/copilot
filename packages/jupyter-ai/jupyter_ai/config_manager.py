@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 from deepmerge import always_merger as Merger
 from jsonschema import Draft202012Validator as Validator
 from jupyter_ai.models import DescribeConfigResponse, GlobalConfig, UpdateConfigRequest
+from jupyter_ai_magics import JupyternautPersona, Persona
 from jupyter_ai_magics.utils import (
     AnyProvider,
     EmProvidersDict,
@@ -96,6 +97,10 @@ class ConfigManager(Configurable):
         config=True,
     )
 
+    model_provider_id: Optional[str]
+    embeddings_provider_id: Optional[str]
+    completions_model_provider_id: Optional[str]
+
     def __init__(
         self,
         log: Logger,
@@ -163,41 +168,49 @@ class ConfigManager(Configurable):
                 {k: v for k, v in existing_config.items() if v is not None},
             )
             config = GlobalConfig(**merged_config)
-            validated_config = self._validate_lm_em_id(config)
+            validated_config = self._validate_model_ids(config)
 
             # re-write to the file to validate the config and apply any
             # updates to the config file immediately
             self._write_config(validated_config)
 
-    def _validate_lm_em_id(self, config):
-        lm_id = config.model_provider_id
-        em_id = config.embeddings_provider_id
+    def _validate_model_ids(self, config):
+        lm_provider_keys = ["model_provider_id", "completions_model_provider_id"]
+        em_provider_keys = ["embeddings_provider_id"]
 
         # if the currently selected language or embedding model are
         # forbidden, set them to `None` and log a warning.
-        if lm_id is not None and not self._validate_model(lm_id, raise_exc=False):
-            self.log.warning(
-                f"Language model {lm_id} is forbidden by current allow/blocklists. Setting to None."
-            )
-            config.model_provider_id = None
-        if em_id is not None and not self._validate_model(em_id, raise_exc=False):
-            self.log.warning(
-                f"Embedding model {em_id} is forbidden by current allow/blocklists. Setting to None."
-            )
-            config.embeddings_provider_id = None
+        for lm_key in lm_provider_keys:
+            lm_id = getattr(config, lm_key)
+            if lm_id is not None and not self._validate_model(lm_id, raise_exc=False):
+                self.log.warning(
+                    f"Language model {lm_id} is forbidden by current allow/blocklists. Setting to None."
+                )
+                setattr(config, lm_key, None)
+        for em_key in em_provider_keys:
+            em_id = getattr(config, em_key)
+            if em_id is not None and not self._validate_model(em_id, raise_exc=False):
+                self.log.warning(
+                    f"Embedding model {em_id} is forbidden by current allow/blocklists. Setting to None."
+                )
+                setattr(config, em_key, None)
 
         # if the currently selected language or embedding model ids are
         # not associated with models, set them to `None` and log a warning.
-        if lm_id is not None and not get_lm_provider(lm_id, self._lm_providers)[1]:
-            self.log.warning(
-                f"No language model is associated with '{lm_id}'. Setting to None."
-            )
-            config.model_provider_id = None
-        if em_id is not None and not get_em_provider(em_id, self._em_providers)[1]:
-            self.log.warning(
-                f"No embedding model is associated with '{em_id}'. Setting to None."
-            )
-            config.embeddings_provider_id = None
+        for lm_key in lm_provider_keys:
+            lm_id = getattr(config, lm_key)
+            if lm_id is not None and not get_lm_provider(lm_id, self._lm_providers)[1]:
+                self.log.warning(
+                    f"No language model is associated with '{lm_id}'. Setting to None."
+                )
+                setattr(config, lm_key, None)
+        for em_key in em_provider_keys:
+            em_id = getattr(config, em_key)
+            if em_id is not None and not get_em_provider(em_id, self._em_providers)[1]:
+                self.log.warning(
+                    f"No embedding model is associated with '{em_id}'. Setting to None."
+                )
+                setattr(config, em_key, None)
 
         return config
 
@@ -320,6 +333,9 @@ class ConfigManager(Configurable):
         complete `GlobalConfig` object, and should not be called publicly."""
         # remove any empty field dictionaries
         new_config.fields = {k: v for k, v in new_config.fields.items() if v}
+        new_config.completions_fields = {
+            k: v for k, v in new_config.completions_fields.items() if v
+        }
 
         self._validate_config(new_config)
         with open(self.config_path, "w") as f:
@@ -327,21 +343,18 @@ class ConfigManager(Configurable):
 
     def delete_api_key(self, key_name: str):
         config_dict = self._read_config().dict()
-        lm_provider = self.lm_provider
-        em_provider = self.em_provider
         required_keys = []
-        if (
-            lm_provider
-            and lm_provider.auth_strategy
-            and lm_provider.auth_strategy.type == "env"
-        ):
-            required_keys.append(lm_provider.auth_strategy.name)
-        if (
-            em_provider
-            and em_provider.auth_strategy
-            and em_provider.auth_strategy.type == "env"
-        ):
-            required_keys.append(self.em_provider.auth_strategy.name)
+        for provider in [
+            self.lm_provider,
+            self.em_provider,
+            self.completions_lm_provider,
+        ]:
+            if (
+                provider
+                and provider.auth_strategy
+                and provider.auth_strategy.type == "env"
+            ):
+                required_keys.append(provider.auth_strategy.name)
 
         if key_name in required_keys:
             raise KeyInUseError(
@@ -389,66 +402,71 @@ class ConfigManager(Configurable):
 
     @property
     def lm_provider(self):
-        config = self._read_config()
-        lm_gid = config.model_provider_id
-        if lm_gid is None:
-            return None
-
-        _, Provider = get_lm_provider(config.model_provider_id, self._lm_providers)
-        return Provider
+        return self._get_provider("model_provider_id", self._lm_providers)
 
     @property
     def em_provider(self):
+        return self._get_provider("embeddings_provider_id", self._em_providers)
+
+    @property
+    def completions_lm_provider(self):
+        return self._get_provider("completions_model_provider_id", self._lm_providers)
+
+    def _get_provider(self, key, listing):
         config = self._read_config()
-        em_gid = config.embeddings_provider_id
-        if em_gid is None:
+        gid = getattr(config, key)
+        if gid is None:
             return None
 
-        _, Provider = get_em_provider(em_gid, self._em_providers)
+        _, Provider = get_lm_provider(gid, listing)
         return Provider
 
     @property
     def lm_provider_params(self):
+        return self._provider_params("model_provider_id", self._lm_providers)
+
+    @property
+    def em_provider_params(self):
+        return self._provider_params("embeddings_provider_id", self._em_providers)
+
+    @property
+    def completions_lm_provider_params(self):
+        return self._provider_params(
+            "completions_model_provider_id", self._lm_providers
+        )
+
+    def _provider_params(self, key, listing):
         # get generic fields
         config = self._read_config()
-        lm_gid = config.model_provider_id
-        if not lm_gid:
+        gid = getattr(config, key)
+        if not gid:
             return None
 
-        lm_lid = lm_gid.split(":", 1)[1]
-        fields = config.fields.get(lm_gid, {})
+        lid = gid.split(":", 1)[1]
 
         # get authn fields
-        _, Provider = get_lm_provider(lm_gid, self._lm_providers)
+        _, Provider = get_em_provider(gid, listing)
         authn_fields = {}
         if Provider.auth_strategy and Provider.auth_strategy.type == "env":
+            keyword_param = (
+                Provider.auth_strategy.keyword_param
+                or Provider.auth_strategy.name.lower()
+            )
             key_name = Provider.auth_strategy.name
-            authn_fields[key_name.lower()] = config.api_keys[key_name]
+            authn_fields[keyword_param] = config.api_keys[key_name]
 
         return {
-            "model_id": lm_lid,
-            **fields,
+            "model_id": lid,
             **authn_fields,
         }
 
     @property
-    def em_provider_params(self):
-        # get generic fields
-        config = self._read_config()
-        em_gid = config.embeddings_provider_id
-        if not em_gid:
-            return None
-
-        em_lid = em_gid.split(":", 1)[1]
-
-        # get authn fields
-        _, Provider = get_em_provider(em_gid, self._em_providers)
-        authn_fields = {}
-        if Provider.auth_strategy and Provider.auth_strategy.type == "env":
-            key_name = Provider.auth_strategy.name
-            authn_fields[key_name.lower()] = config.api_keys[key_name]
-
-        return {
-            "model_id": em_lid,
-            **authn_fields,
-        }
+    def persona(self) -> Persona:
+        """
+        The current agent persona, set by the selected LM provider. If the
+        selected LM provider is `None`, this property returns
+        `JupyternautPersona` by default.
+        """
+        lm_provider = self.lm_provider
+        persona = getattr(lm_provider, "persona", None) or JupyternautPersona
+        return persona

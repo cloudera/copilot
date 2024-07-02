@@ -4,29 +4,25 @@ from ._version import __version__
 from .embedding_providers import (
     BaseEmbeddingsProvider,
     BedrockEmbeddingsProvider,
-    CohereEmbeddingsProvider,
     GPT4AllEmbeddingsProvider,
     HfHubEmbeddingsProvider,
-    OpenAIEmbeddingsProvider,
     QianfanEmbeddingsEndpointProvider,
 )
 from .exception import store_exception
 from .magics import AiMagics
 
+# expose JupyternautPersona on the package root
+# required by `jupyter-ai`.
+from .models.persona import JupyternautPersona, Persona
+
 # expose model providers on the package root
 from .providers import (
     AI21Provider,
-    AnthropicProvider,
-    AzureChatOpenAIProvider,
     BaseProvider,
     BedrockChatProvider,
     BedrockProvider,
-    ChatAnthropicProvider,
-    ChatOpenAIProvider,
-    CohereProvider,
     GPT4AllProvider,
     HfHubProvider,
-    OpenAIProvider,
     QianfanProvider,
     SmEndpointProvider,
     TogetherAIProvider,

@@ -1,13 +1,19 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AiService } from '../../handler';
+import { getProviderId, getModelLocalId } from '../../utils';
 
-type ServerInfoProperties = {
-  config: AiService.DescribeConfigResponse;
-  lmProviders: AiService.ListProvidersResponse;
-  emProviders: AiService.ListProvidersResponse;
+type ProvidersInfo = {
   lmProvider: AiService.ListProvidersEntry | null;
   emProvider: AiService.ListProvidersEntry | null;
   lmLocalId: string;
+};
+
+type ServerInfoProperties = {
+  lmProviders: AiService.ListProvidersResponse;
+  emProviders: AiService.ListProvidersResponse;
+  config: AiService.DescribeConfigResponse;
+  chat: ProvidersInfo;
+  completions: Omit<ProvidersInfo, 'emProvider'>;
 };
 
 type ServerInfoMethods = {
@@ -63,14 +69,26 @@ export function useServerInfo(): ServerInfo {
         lmGid === null ? null : getProvider(lmGid, lmProviders);
       const emProvider =
         emGid === null ? null : getProvider(emGid, emProviders);
-      const lmLocalId = lmGid === null ? '' : getLocalId(lmGid);
+      const lmLocalId = (lmGid && getModelLocalId(lmGid)) ?? '';
+
+      const cLmGid = config.completions_model_provider_id;
+      const cLmProvider =
+        cLmGid === null ? null : getProvider(cLmGid, lmProviders);
+      const cLmLocalId = (cLmGid && getModelLocalId(cLmGid)) ?? '';
+
       setServerInfoProps({
         config,
         lmProviders,
         emProviders,
-        lmProvider,
-        emProvider,
-        lmLocalId
+        chat: {
+          lmProvider,
+          emProvider,
+          lmLocalId
+        },
+        completions: {
+          lmProvider: cLmProvider,
+          lmLocalId: cLmLocalId
+        }
       });
 
       setState(ServerInfoState.Ready);
@@ -134,26 +152,4 @@ function getProvider(
   const providerId = getProviderId(gid);
   const provider = providers.providers.find(p => p.id === providerId);
   return provider ?? null;
-}
-
-function getProviderId(gid: string) {
-  if (!gid) {
-    return null;
-  }
-
-  const components = gid.split(':');
-  if (components.length < 2) {
-    return null;
-  }
-
-  return components[0];
-}
-
-function getLocalId(gid: string) {
-  const components = gid.split(':');
-  if (components.length < 2) {
-    return '';
-  }
-
-  return components[1];
 }

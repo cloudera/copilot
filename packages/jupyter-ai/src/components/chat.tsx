@@ -5,9 +5,11 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import type { Awareness } from 'y-protocols/awareness';
 import type { IThemeManager } from '@jupyterlab/apputils';
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './chat-messages';
+import { PendingMessages } from './pending-messages';
 import { ChatInput } from './chat-input';
 import { ChatSettings } from './chat-settings';
 import { AiService } from '../handler';
@@ -18,7 +20,11 @@ import {
 import { SelectionWatcher } from '../selection-watcher';
 import { ChatHandler } from '../chat_handler';
 import { CollaboratorsContextProvider } from '../contexts/collaborators-context';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { IJaiCompletionProvider } from '../tokens';
+import {
+  ActiveCellContextProvider,
+  ActiveCellManager
+} from '../contexts/active-cell-context';
 import { ScrollContainer } from './scroll-container';
 
 type ChatBodyProps = {
@@ -32,26 +38,27 @@ function ChatBody({
   setChatView: chatViewHandler,
   rmRegistry: renderMimeRegistry
 }: ChatBodyProps): JSX.Element {
-  const [messages, setMessages] = useState<AiService.ChatMessage[]>([]);
+  const [messages, setMessages] = useState<AiService.ChatMessage[]>([
+    ...chatHandler.history.messages
+  ]);
+  const [pendingMessages, setPendingMessages] = useState<
+    AiService.PendingMessage[]
+  >([...chatHandler.history.pending_messages]);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(false);
   const [includeSelection, setIncludeSelection] = useState(true);
   const [replaceSelection, setReplaceSelection] = useState(false);
   const [input, setInput] = useState('');
-  const [selection, replaceSelectionFn] = useSelectionContext();
+  const [textSelection, replaceTextSelection] = useSelectionContext();
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState(true);
 
   /**
-   * Effect: fetch history and config on initial render
+   * Effect: fetch config on initial render
    */
   useEffect(() => {
-    async function fetchHistory() {
+    async function fetchConfig() {
       try {
-        const [history, config] = await Promise.all([
-          chatHandler.getHistory(),
-          AiService.getConfig()
-        ]);
+        const config = await AiService.getConfig();
         setSendWithShiftEnter(config.send_with_shift_enter ?? false);
-        setMessages(history.messages);
         if (!config.model_provider_id) {
           setShowWelcomeMessage(true);
         }
@@ -60,51 +67,47 @@ function ChatBody({
       }
     }
 
-    fetchHistory();
+    fetchConfig();
   }, [chatHandler]);
 
   /**
    * Effect: listen to chat messages
    */
   useEffect(() => {
-    function handleChatEvents(message: AiService.Message) {
-      if (message.type === 'connection') {
-        return;
-      } else if (message.type === 'clear') {
-        setMessages([]);
-        return;
-      }
-
-      setMessages(messageGroups => [...messageGroups, message]);
+    function onHistoryChange(_: unknown, history: AiService.ChatHistory) {
+      setMessages([...history.messages]);
+      setPendingMessages([...history.pending_messages]);
     }
 
-    chatHandler.addListener(handleChatEvents);
+    chatHandler.historyChanged.connect(onHistoryChange);
+
     return function cleanup() {
-      chatHandler.removeListener(handleChatEvents);
+      chatHandler.historyChanged.disconnect(onHistoryChange);
     };
   }, [chatHandler]);
 
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
-  const onSend = async () => {
+  // TODO: unify how text selection & cell selection are handled
+  const onSend = async (selection?: AiService.Selection) => {
     setInput('');
 
     const prompt =
       input +
-      (includeSelection && selection?.text
-        ? '\n\n```\n' + selection.text + '\n```'
+      (includeSelection && textSelection?.text
+        ? '\n\n```\n' + textSelection.text + '\n```'
         : '');
 
     // send message to backend
-    const messageId = await chatHandler.sendMessage({ prompt });
+    const messageId = await chatHandler.sendMessage({ prompt, selection });
 
     // await reply from agent
     // no need to append to messageGroups state variable, since that's already
     // handled in the effect hooks.
     const reply = await chatHandler.replyFor(messageId);
-    if (replaceSelection && selection) {
-      const { cellId, ...selectionProps } = selection;
-      replaceSelectionFn({
+    if (replaceSelection && textSelection) {
+      const { cellId, ...selectionProps } = textSelection;
+      replaceTextSelection({
         ...selectionProps,
         ...(cellId && { cellId }),
         text: reply.body
@@ -150,12 +153,13 @@ function ChatBody({
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
         <ChatMessages messages={messages} rmRegistry={renderMimeRegistry} />
+        <PendingMessages messages={pendingMessages} />
       </ScrollContainer>
       <ChatInput
         value={input}
         onChange={setInput}
         onSend={onSend}
-        hasSelection={!!selection?.text}
+        hasSelection={!!textSelection?.text}
         includeSelection={includeSelection}
         toggleIncludeSelection={() =>
           setIncludeSelection(includeSelection => !includeSelection)
@@ -184,6 +188,9 @@ export type ChatProps = {
   themeManager: IThemeManager | null;
   rmRegistry: IRenderMimeRegistry;
   chatView?: ChatView;
+  completionProvider: IJaiCompletionProvider | null;
+  openInlineCompleterSettings: () => void;
+  activeCellManager: ActiveCellManager;
 };
 
 enum ChatView {
@@ -198,47 +205,57 @@ export function Chat(props: ChatProps): JSX.Element {
     <JlThemeProvider themeManager={props.themeManager}>
       <SelectionContextProvider selectionWatcher={props.selectionWatcher}>
         <CollaboratorsContextProvider globalAwareness={props.globalAwareness}>
-          <Box
-            // root box should not include padding as it offsets the vertical
-            // scrollbar to the left
-            sx={{
-              width: '100%',
-              height: '100%',
-              boxSizing: 'border-box',
-              background: 'var(--jp-layout-color0)',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
+          <ActiveCellContextProvider
+            activeCellManager={props.activeCellManager}
           >
-            {/* top bar */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              {view !== ChatView.Chat ? (
-                <IconButton onClick={() => setView(ChatView.Chat)}>
-                  <ArrowBackIcon />
-                </IconButton>
-              ) : (
-                <Box />
+            <Box
+              // root box should not include padding as it offsets the vertical
+              // scrollbar to the left
+              sx={{
+                width: '100%',
+                height: '100%',
+                boxSizing: 'border-box',
+                background: 'var(--jp-layout-color0)',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              {/* top bar */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                {view !== ChatView.Chat ? (
+                  <IconButton onClick={() => setView(ChatView.Chat)}>
+                    <ArrowBackIcon />
+                  </IconButton>
+                ) : (
+                  <Box />
+                )}
+                {view === ChatView.Chat ? (
+                  <IconButton onClick={() => setView(ChatView.Settings)}>
+                    <SettingsIcon />
+                  </IconButton>
+                ) : (
+                  <Box />
+                )}
+              </Box>
+              {/* body */}
+              {view === ChatView.Chat && (
+                <ChatBody
+                  chatHandler={props.chatHandler}
+                  setChatView={setView}
+                  rmRegistry={props.rmRegistry}
+                />
               )}
-              {view === ChatView.Chat ? (
-                <IconButton onClick={() => setView(ChatView.Settings)}>
-                  <SettingsIcon />
-                </IconButton>
-              ) : (
-                <Box />
+              {view === ChatView.Settings && (
+                <ChatSettings
+                  rmRegistry={props.rmRegistry}
+                  completionProvider={props.completionProvider}
+                  openInlineCompleterSettings={
+                    props.openInlineCompleterSettings
+                  }
+                />
               )}
             </Box>
-            {/* body */}
-            {view === ChatView.Chat && (
-              <ChatBody
-                chatHandler={props.chatHandler}
-                setChatView={setView}
-                rmRegistry={props.rmRegistry}
-              />
-            )}
-            {view === ChatView.Settings && (
-              <ChatSettings rmRegistry={props.rmRegistry} />
-            )}
-          </Box>
+          </ActiveCellContextProvider>
         </CollaboratorsContextProvider>
       </SelectionContextProvider>
     </JlThemeProvider>

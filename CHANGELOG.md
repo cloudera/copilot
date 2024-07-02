@@ -2,6 +2,226 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 2.18.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.18.0...37dc8ecdffedf8763e9fabfdd2769520a7af3885))
+
+### Enhancements made
+
+- Add claude sonnet 3.5 models [#847](https://github.com/jupyterlab/jupyter-ai/pull/847) ([@srdas](https://github.com/srdas))
+- Update `clear` slash command to use `HelpChatHandler` to reinstate the help menu [#846](https://github.com/jupyterlab/jupyter-ai/pull/846) ([@srdas](https://github.com/srdas))
+
+### Bugs fixed
+
+- Fix send via keyboard after sending slash command with arguments [#850](https://github.com/jupyterlab/jupyter-ai/pull/850) ([@dlqqq](https://github.com/dlqqq))
+- Fix Cohere models by using new `langchain-cohere` partner package [#848](https://github.com/jupyterlab/jupyter-ai/pull/848) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-06-20&to=2024-06-21&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-06-20..2024-06-21&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-06-20..2024-06-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 2.18.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.17.0...698ee8e5994da2b9af3cef90396cf9ed5fd65064))
+
+### Enhancements made
+
+- Add new Cohere models [#834](https://github.com/jupyterlab/jupyter-ai/pull/834) ([@srdas](https://github.com/srdas))
+- Group messages with their replies [#832](https://github.com/jupyterlab/jupyter-ai/pull/832) ([@michaelchia](https://github.com/michaelchia))
+- Support Notebook 7 [#827](https://github.com/jupyterlab/jupyter-ai/pull/827) ([@jtpio](https://github.com/jtpio))
+- Support pending/loading message while waiting for response [#821](https://github.com/jupyterlab/jupyter-ai/pull/821) ([@michaelchia](https://github.com/michaelchia))
+
+### Bugs fixed
+
+- Fix compatibility with Python 3.8 [#844](https://github.com/jupyterlab/jupyter-ai/pull/844) ([@krassowski](https://github.com/krassowski))
+
+### Documentation improvements
+
+- Updates end of maintenance messaging to be in the past tense [#843](https://github.com/jupyterlab/jupyter-ai/pull/843) ([@JasonWeill](https://github.com/JasonWeill))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-06-12&to=2024-06-19&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-06-12..2024-06-19&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-06-12..2024-06-19&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajtpio+updated%3A2024-06-12..2024-06-19&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-06-12..2024-06-19&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-06-12..2024-06-19&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-06-12..2024-06-19&type=Issues)
+
+## 2.17.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.16.0...ff7bd1a7a538b36464487e8a856af5347a3dabcc))
+
+### Enhancements made
+
+- Add `/fix` slash command [#828](https://github.com/jupyterlab/jupyter-ai/pull/828) ([@dlqqq](https://github.com/dlqqq))
+- Add support for MistralAI [#823](https://github.com/jupyterlab/jupyter-ai/pull/823) ([@jtpio](https://github.com/jtpio))
+- Document supported file types for /learn [#816](https://github.com/jupyterlab/jupyter-ai/pull/816) ([@JasonWeill](https://github.com/JasonWeill))
+- Refactor split function with tests [#811](https://github.com/jupyterlab/jupyter-ai/pull/811) ([@srdas](https://github.com/srdas))
+- Autocomplete UI for slash commands [#810](https://github.com/jupyterlab/jupyter-ai/pull/810) ([@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Update chat handling to clear chat and show help; small fix to `/export`  [#826](https://github.com/jupyterlab/jupyter-ai/pull/826) ([@srdas](https://github.com/srdas))
+
+### Maintenance and upkeep improvements
+
+- Prevent overriding `server_settings` on base provider class [#825](https://github.com/jupyterlab/jupyter-ai/pull/825) ([@krassowski](https://github.com/krassowski))
+- Fix import deprecations [#824](https://github.com/jupyterlab/jupyter-ai/pull/824) ([@jtpio](https://github.com/jtpio))
+
+### Documentation improvements
+
+- Document supported file types for /learn [#816](https://github.com/jupyterlab/jupyter-ai/pull/816) ([@JasonWeill](https://github.com/JasonWeill))
+- Document how to create completions using full notebook content [#777](https://github.com/jupyterlab/jupyter-ai/pull/777) ([@krassowski](https://github.com/krassowski))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-05-20&to=2024-06-12&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-05-20..2024-06-12&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-05-20..2024-06-12&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajtpio+updated%3A2024-05-20..2024-06-12&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-05-20..2024-06-12&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-05-20..2024-06-12&type=Issues)
+
+## 2.16.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.15.0...e41cebf3ef137509d43ef6e54703c47c7e3d7a22))
+
+### Enhancements made
+
+- Added gpt-4o [#793](https://github.com/jupyterlab/jupyter-ai/pull/793) ([@srdas](https://github.com/srdas))
+- Add code toolbar to Jupyter AI chat [#789](https://github.com/jupyterlab/jupyter-ai/pull/789) ([@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Fix Azure OpenAI authentication from UI [#794](https://github.com/jupyterlab/jupyter-ai/pull/794) ([@dlqqq](https://github.com/dlqqq))
+- Updated Hugging Face chat and magics processing with new APIs, clients [#784](https://github.com/jupyterlab/jupyter-ai/pull/784) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-05-09&to=2024-05-20&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-05-09..2024-05-20&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-05-09..2024-05-20&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-05-09..2024-05-20&type=Issues)
+
+## 2.15.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.14.1...3b3ac27eed2c481b4565659b0fc7470c36267fc7))
+
+### Enhancements made
+
+- Add Titan embedding model v2 [#778](https://github.com/jupyterlab/jupyter-ai/pull/778) ([@srdas](https://github.com/srdas))
+- Save chat history to Jupyter Lab's root directory [#770](https://github.com/jupyterlab/jupyter-ai/pull/770) ([@srdas](https://github.com/srdas))
+- Add new Bedrock model IDs [#764](https://github.com/jupyterlab/jupyter-ai/pull/764) ([@srdas](https://github.com/srdas))
+- learn arxiv tex files [#742](https://github.com/jupyterlab/jupyter-ai/pull/742) ([@srdas](https://github.com/srdas))
+- Distinguish between completion and chat models [#711](https://github.com/jupyterlab/jupyter-ai/pull/711) ([@krassowski](https://github.com/krassowski))
+
+### Bugs fixed
+
+- Save chat history to Jupyter Lab's root directory [#770](https://github.com/jupyterlab/jupyter-ai/pull/770) ([@srdas](https://github.com/srdas))
+- change unsupported_slash_commands default value from dict to set [#768](https://github.com/jupyterlab/jupyter-ai/pull/768) ([@michaelchia](https://github.com/michaelchia))
+- Switch to langchain_community [#758](https://github.com/jupyterlab/jupyter-ai/pull/758) ([@srdas](https://github.com/srdas))
+
+### Documentation improvements
+
+- Add JL3 end-of-maintenance notice to README and RTD [#760](https://github.com/jupyterlab/jupyter-ai/pull/760) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-04-29&to=2024-05-09&type=c))
+
+[@3coins](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3A3coins+updated%3A2024-04-29..2024-05-09&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-04-29..2024-05-09&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-04-29..2024-05-09&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-04-29..2024-05-09&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-04-29..2024-05-09&type=Issues)
+
+## 2.14.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.14.0...e6dab8ee414275cf8590d70ce65310596b5f1872))
+
+### Bugs fixed
+
+- Load persisted vector store by default [#753](https://github.com/jupyterlab/jupyter-ai/pull/753) ([@dlqqq](https://github.com/dlqqq))
+- Remove `pypdf` from required dependencies [#752](https://github.com/jupyterlab/jupyter-ai/pull/752) ([@dlqqq](https://github.com/dlqqq))
+- Fix /learn in 2.14.0 [#747](https://github.com/jupyterlab/jupyter-ai/pull/747) ([@michaelchia](https://github.com/michaelchia))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-04-25&to=2024-04-29&type=c))
+
+[@3coins](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3A3coins+updated%3A2024-04-25..2024-04-29&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-04-25..2024-04-29&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-04-25..2024-04-29&type=Issues)
+
+## 2.14.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.13.0...9c8046c742dcad2db57fff70bb10257f1c7123e6))
+
+### Enhancements made
+
+- Handle single files, pdfs, errors from missing loader dependencies in `/learn` [#733](https://github.com/jupyterlab/jupyter-ai/pull/733) ([@srdas](https://github.com/srdas))
+- Move methods generating completion replies to the provider [#717](https://github.com/jupyterlab/jupyter-ai/pull/717) ([@krassowski](https://github.com/krassowski))
+- Handle Single Files and also enable html, pdf file formats for /learn [#712](https://github.com/jupyterlab/jupyter-ai/pull/712) ([@srdas](https://github.com/srdas))
+
+### Bugs fixed
+
+- Catch embedding model validation errors on extension init [#735](https://github.com/jupyterlab/jupyter-ai/pull/735) ([@dlqqq](https://github.com/dlqqq))
+- Require `jupyter_ai_magics` 2.13.0 to fix `Persona` import [#731](https://github.com/jupyterlab/jupyter-ai/pull/731) ([@krassowski](https://github.com/krassowski))
+- Fixes help slash command. [#729](https://github.com/jupyterlab/jupyter-ai/pull/729) ([@3coins](https://github.com/3coins))
+- Remove trailing Markdown code tags in completion suggestions [#726](https://github.com/jupyterlab/jupyter-ai/pull/726) ([@bartleusink](https://github.com/bartleusink))
+- Update Azure OpenAI fields [#722](https://github.com/jupyterlab/jupyter-ai/pull/722) ([@cloutier](https://github.com/cloutier))
+- Handle Single Files and also enable html, pdf file formats for /learn [#712](https://github.com/jupyterlab/jupyter-ai/pull/712) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-04-04&to=2024-04-25&type=c))
+
+[@3coins](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3A3coins+updated%3A2024-04-04..2024-04-25&type=Issues) | [@bartleusink](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Abartleusink+updated%3A2024-04-04..2024-04-25&type=Issues) | [@cloutier](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Acloutier+updated%3A2024-04-04..2024-04-25&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-04-04..2024-04-25&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-04-04..2024-04-25&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-04-04..2024-04-25&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Awelcome+updated%3A2024-04-04..2024-04-25&type=Issues)
+
+## 2.13.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.12.0...34051ba848ec0346ce77aa28fa9b3ce3ad4e776d))
+
+### Enhancements made
+
+- Improve support for custom providers [#713](https://github.com/jupyterlab/jupyter-ai/pull/713) ([@dlqqq](https://github.com/dlqqq))
+- Update Anthropic providers to use `langchain_anthropic` partner package [#700](https://github.com/jupyterlab/jupyter-ai/pull/700) ([@dlqqq](https://github.com/dlqqq))
+- Add Claude-3-Haiku [#696](https://github.com/jupyterlab/jupyter-ai/pull/696) ([@srdas](https://github.com/srdas))
+- Use `AZURE_OPENAI_API_KEY` for Azure OpenAI provider [#691](https://github.com/jupyterlab/jupyter-ai/pull/691) ([@aroffe99](https://github.com/aroffe99))
+- /export added [#658](https://github.com/jupyterlab/jupyter-ai/pull/658) ([@apurvakhatri](https://github.com/apurvakhatri))
+
+### Bugs fixed
+
+- Fix rendering of model IDs with a colon in their name [#704](https://github.com/jupyterlab/jupyter-ai/pull/704) ([@dlqqq](https://github.com/dlqqq))
+- Update Anthropic providers to use `langchain_anthropic` partner package [#700](https://github.com/jupyterlab/jupyter-ai/pull/700) ([@dlqqq](https://github.com/dlqqq))
+- Use new `langchain-openai` partner package [#653](https://github.com/jupyterlab/jupyter-ai/pull/653) ([@startakovsky](https://github.com/startakovsky))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-03-11&to=2024-04-04&type=c))
+
+[@apurvakhatri](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aapurvakhatri+updated%3A2024-03-11..2024-04-04&type=Issues) | [@aroffe99](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aaroffe99+updated%3A2024-03-11..2024-04-04&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-03-11..2024-04-04&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Alumberbot-app+updated%3A2024-03-11..2024-04-04&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-03-11..2024-04-04&type=Issues) | [@startakovsky](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Astartakovsky+updated%3A2024-03-11..2024-04-04&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Awelcome+updated%3A2024-03-11..2024-04-04&type=Issues)
+
+## 2.12.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.11.0...60e9161e55304e51e7fa1d08a227bde594d13115))
+
+### Enhancements made
+
+- Add Anthropic Claude 3 models to providers [#672](https://github.com/jupyterlab/jupyter-ai/pull/672) ([@srdas](https://github.com/srdas))
+- Add support for Gemini [#666](https://github.com/jupyterlab/jupyter-ai/pull/666) ([@giswqs](https://github.com/giswqs))
+- %ai version added [#665](https://github.com/jupyterlab/jupyter-ai/pull/665) ([@apurvakhatri](https://github.com/apurvakhatri))
+- Together.ai provider added [#654](https://github.com/jupyterlab/jupyter-ai/pull/654) ([@MahdiDavari](https://github.com/MahdiDavari))
+
+### Bugs fixed
+
+- Fix selecting models with a colon in their ID [#682](https://github.com/jupyterlab/jupyter-ai/pull/682) ([@dlqqq](https://github.com/dlqqq))
+- Use regex in TeX replace function to catch repeating symbol occurrences [#675](https://github.com/jupyterlab/jupyter-ai/pull/675) ([@andrii-i](https://github.com/andrii-i))
+- Resolves chat panel initialization error [#660](https://github.com/jupyterlab/jupyter-ai/pull/660) ([@abbott](https://github.com/abbott))
+- fix bug: check before using the variables [#656](https://github.com/jupyterlab/jupyter-ai/pull/656) ([@ya0guang](https://github.com/ya0guang))
+
+### Documentation improvements
+
+- Update nodejs installation [#679](https://github.com/jupyterlab/jupyter-ai/pull/679) ([@giswqs](https://github.com/giswqs))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-03-04&to=2024-03-11&type=c))
+
+[@abbott](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aabbott+updated%3A2024-03-04..2024-03-11&type=Issues) | [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrii-i+updated%3A2024-03-04..2024-03-11&type=Issues) | [@apurvakhatri](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aapurvakhatri+updated%3A2024-03-04..2024-03-11&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-03-04..2024-03-11&type=Issues) | [@giswqs](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Agiswqs+updated%3A2024-03-04..2024-03-11&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Alumberbot-app+updated%3A2024-03-04..2024-03-11&type=Issues) | [@MahdiDavari](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AMahdiDavari+updated%3A2024-03-04..2024-03-11&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-03-04..2024-03-11&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Awelcome+updated%3A2024-03-04..2024-03-11&type=Issues) | [@ya0guang](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aya0guang+updated%3A2024-03-04..2024-03-11&type=Issues)
+
 ## 2.11.0
 
 This release notably includes a significant UI improvement for the chat side panel. The chat UI now uses the native JupyterLab frontend to render Markdown, code blocks, and TeX markup instead of a third party package. Thank you to @andrii-i for building this feature!
@@ -31,8 +251,6 @@ This release notably includes a significant UI improvement for the chat side pan
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-02-06&to=2024-03-04&type=c))
 
 [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrii-i+updated%3A2024-02-06..2024-03-04&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-02-06..2024-03-04&type=Issues) | [@droumis](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adroumis+updated%3A2024-02-06..2024-03-04&type=Issues) | [@EduardDurech](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AEduardDurech+updated%3A2024-02-06..2024-03-04&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-02-06..2024-03-04&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajtpio+updated%3A2024-02-06..2024-03-04&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-02-06..2024-03-04&type=Issues) | [@lalanikarim](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Alalanikarim+updated%3A2024-02-06..2024-03-04&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Alumberbot-app+updated%3A2024-02-06..2024-03-04&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Awelcome+updated%3A2024-02-06..2024-03-04&type=Issues) | [@Wzixiao](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AWzixiao+updated%3A2024-02-06..2024-03-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 2.10.0
 
