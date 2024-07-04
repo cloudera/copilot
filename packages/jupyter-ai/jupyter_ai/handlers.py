@@ -371,17 +371,13 @@ class ModelProviderHandler(ProviderHandler):
 
         # Read enabled models from config file.
         models = self.getConfiguredThirdPartyModels()
-        configured_model_names = []
-        if models:
-            for model in models:
-                configured_model_names.append(model['name'])
+        configured_model_names = [model['name'] for model in models] if models else []
 
         # Step 1: gather providers
         for provider in self.lm_providers.values():
             if "bedrock" not in provider.id and provider.id != "cloudera":
                 continue
 
-            enabled_models = []
             if "bedrock" in provider.id:
                 enabled_models = [model for model in provider.models if model in configured_model_names]
             else:
@@ -432,10 +428,7 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
     @web.authenticated
     def get(self):
         models = self.getConfiguredThirdPartyModels()
-        model_names = []
-        if models:
-            for model in models:
-                model_names.append(model['name'])
+        configured_model_names = [model['name'] for model in models] if models else []
 
         providers = []
 
@@ -443,11 +436,8 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
             if "bedrock" not in provider.id and provider.id != "cloudera":
                 continue
 
-            enabled_models = []
             if "bedrock" in provider.id:
-                for provider_model in provider.models:
-                    if provider_model in model_names:
-                        enabled_models.append(provider_model)
+                enabled_models = [model for model in provider.models if model in configured_model_names]
             else:
                 enabled_models = provider.models
 
