@@ -1,3 +1,17 @@
+# Cloudera Copilot
+
+To fetch the latest changes from Jupyter AI, do the following:
+
+First, add the public repository as a remote:
+```bash
+git remote add public https://github.com/jupyterlab/jupyter-ai
+```
+
+Then, figure out the latest stable release. At the time of writing this, it is v2.18.1. Afterwards, you can merge the changes:
+```bash
+git merge public/main@{v2.18.1}
+```
+
 # Jupyter AI
 
 **Jupyter AI is under incubation as part of the JupyterLab organization.**
