@@ -5,6 +5,7 @@ import os
 import base64
 import subprocess
 
+
 def stringToB64String(s):
     return base64.b64encode(s.encode('utf-8')).decode("utf-8")
 
@@ -110,7 +111,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "custom1"
+        return "cloudera"
 
     def GetInferenceEndpoint(self, model):
         logging.error(self.ai_inference_models)
@@ -158,7 +159,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
             r = requests.post(inference_endpoint,
                               data = my_req_data,
                               headers={'Content-Type': 'application/json',
-                              'Authorization': 'Bearer ' + cdp_token}, verify=False)
+                              'Authorization': 'Bearer ' + cdp_token}, verify=True)
         except Exception as e:
             print(e)
             return "Request to Cloudera AI Inference Service failed."
