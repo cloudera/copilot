@@ -1,10 +1,15 @@
-from typing import Any, List, Mapping, Optional
+from typing import Any, AsyncIterator, Dict, Iterator, List, Mapping, Optional
 import json
 import logging
 import os
 import base64
 import subprocess
 
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import BaseMessage, BaseMessageChunk
+from langchain_core.messages.ai import AIMessageChunk
+from langchain_core.outputs import ChatGenerationChunk
+from langchain_core.runnables.config import RunnableConfig
 
 def stringToB64String(s):
     return base64.b64encode(s.encode('utf-8')).decode("utf-8")
@@ -25,7 +30,6 @@ def getCopilotModels(config_dir):
 
     f = open(config_dir)
     copilot_config = json.load(f)
-    logging.error(copilot_config)
     ai_inference_models = []
     if copilot_config and "aiInferenceModels" in copilot_config and copilot_config["aiInferenceModels"]:
         ai_inference_models = copilot_config['aiInferenceModels']
@@ -34,7 +38,6 @@ def getCopilotModels(config_dir):
     models = []
 
     for ai_inference_model in ai_inference_models:
-        logging.error(ai_inference_model)
         models.append(ai_inference_model['name'])
 
     return ai_inference_models, models
@@ -73,8 +76,6 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         return completed_process.returncode == 0
 
     def GetCDPToken(self):
-        logging.error("CDP CLI Path:")
-        logging.error(self.cdp_cli_path)
         if not os.path.exists(self.cdp_cli_path):
             logging.error("CDP CLI is not installed. Please install by running the command 'pip install cdpcli' in Terminal Access.")
             return None
@@ -87,11 +88,7 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
             logging.error("Unable to get CDP Token.")
             return None
 
-        logging.error("CDPCLI response: ")
-        logging.error(completed_process.stdout)
         response = json.loads(completed_process.stdout)
-        logging.error("Parsed CDPCLI response: ")
-        logging.error(response)
         return response['token']
 
     def __init__(self, **kwargs):
@@ -121,6 +118,51 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
                 return endpoint['endpoint']
         return ""
 
+
+    def _stream(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any) -> Iterator[ChatGenerationChunk]:
+
+        inference_endpoint = self.GetInferenceEndpoint(self.model)
+        if not inference_endpoint:
+            logging.error("Unable to find endpoint: " + self.model)
+            return "Error: unable to find endpoint: " + self.model
+        req_data = '{"prompt": "' + messages[-1].content.encode('unicode_escape').decode("utf-8")
+
+        my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256,"stream":true}'
+        logging.info('req:')
+        logging.info(my_req_data)
+
+        cdp_token = self.GetCDPToken()
+        if not cdp_token:
+            logging.error("Unable to get CDP Token.")
+            return "Unable to get CDP Token. Please install CDP CLI by running the command 'pip install cdpcli' in Terminal Access and make sure all required environment variables are set. See https://docs.cloudera.com/r/jupyter-copilot for more details."
+        try:
+            r = requests.post(inference_endpoint,
+                              data = my_req_data,
+                              headers={'Content-Type': 'application/json',
+                              'Authorization': 'Bearer ' + cdp_token},
+                              verify=True,
+                              stream=True)
+        except Exception as e:
+            logging.error(e)
+            return "Request to Cloudera AI Inference Service failed."
+
+        for line in r.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8')
+                if decoded_line and len(decoded_line) > 6:
+                    data = decoded_line[6:]
+                    if data != "[DONE]":
+                        line_json = json.loads(decoded_line[6:])
+                        if "choices" in line_json:
+                            if "text" in line_json["choices"][0]:
+                                chunk = ChatGenerationChunk(message=AIMessageChunk(content=line_json["choices"][0]["text"]))
+                                yield chunk
+
     def _call(
         self,
         prompt: str,
@@ -128,68 +170,9 @@ class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> str:
-        inference_endpoint = self.GetInferenceEndpoint(self.model)
-        if not inference_endpoint:
-            logging.error("Unable to find endpoint: " + self.model)
-            return "Error: unable to find endpoint: " + self.model
-
-        logging.error("call kwargs:")
-        logging.error(kwargs)
-        logging.error('prompt:')
+        logging.error("_call")
         logging.error(prompt)
-        logging.error('prompt:')
-        logging.error(prompt[-1].content)
-        req_data = '{"prompt": "' + prompt[-1].content.encode('unicode_escape').decode("utf-8")
-
-        my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256}'
-        logging.error('req:')
-        logging.error(my_req_data)
-
-        cdp_token = self.GetCDPToken()
-        logging.error('cdp_token:')
-        logging.error(cdp_token)
-        logging.error('inference_endpoint:')
-        logging.error(inference_endpoint)
-        if not cdp_token:
-            logging.error("Unable to get CDP Token.")
-            return "Unable to get CDP Token. Please install CDP CLI by running the command 'pip install cdpcli' in Terminal Access and make sure all required environment variables are set. See https://docs.cloudera.com/r/jupyter-copilot for more details."
-        logging.error('cdp_token:')
-        logging.error(cdp_token)
-        try:
-            r = requests.post(inference_endpoint,
-                              data = my_req_data,
-                              headers={'Content-Type': 'application/json',
-                              'Authorization': 'Bearer ' + cdp_token}, verify=True)
-        except Exception as e:
-            print(e)
-            return "Request to Cloudera AI Inference Service failed."
-
-        logging.error('r:')
-        logging.error(r)
-        if r.json():
-          logging.error('rjson:')
-          logging.error(r.json())
-          if r.json()['choices'] and len(r.json()['choices']) > 0 and r.json()['choices'][0]['text']:
-            return r.json()['choices'][0]['text']
-        logging.error('No r.json in response.')
-        logging.error(r)
-        return r
-
-        decoded_str = b64StringToString(r)
-        logging.error('rjson:')
-        logging.error(decoded_str.json())
-        if 'errors' in decoded_str.json():
-            logging.error('error:')
-            logging.error(decoded_str.json()['errors'])
-            return decoded_str.json()['errors']
-        elif 'predictions' in decoded_str.json():
-            logging.error('predictions:')
-            logging.error(decoded_str.json()['predictions'])
-            return decoded_str.json()['predictions'][0]
-        else:
-            logging.error('response:')
-            logging.error(decoded_str.json()['response'])
-            return decoded_str.json()['response']
+        return prompt
 
     @property
     def _identifying_params(self) -> Mapping[str, Any]:

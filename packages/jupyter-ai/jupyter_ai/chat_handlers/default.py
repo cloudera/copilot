@@ -112,17 +112,14 @@ class DefaultChatHandler(BaseChatHandler):
                 stream_id = self._start_stream(human_msg=message)
                 received_first_chunk = True
 
-            self._send_stream_chunk(stream_id, chunk.content)
-            '''
-            # Temporarily disabling this logic to fix Cloudera AI Inference Provider
-            # which returns an AIMessage instead of an AIMessageChunk.
+            # self._send_stream_chunk(stream_id, chunk.content)
             if isinstance(chunk, AIMessageChunk):
                 self._send_stream_chunk(stream_id, chunk.content)
             elif isinstance(chunk, str):
                 self._send_stream_chunk(stream_id, chunk)
             else:
                 self.log.error(f"Unrecognized type of chunk yielded: {type(chunk)}")
-                break'''
+                break
 
         # complete stream after all chunks have been streamed
         self._send_stream_chunk(stream_id, "", complete=True)
