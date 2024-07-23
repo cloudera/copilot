@@ -437,7 +437,7 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
                 continue
 
             if "bedrock" in provider.id:
-                enabled_models = [model for model in provider.models if model in configured_model_names]
+                enabled_models = [model for model in provider.models if (provider.id + ":" + model) in configured_model_names]
             else:
                 enabled_models = provider.models
 
