@@ -11,12 +11,12 @@ please see the {doc}`developer's guide </developers/index>`.
 ## Prerequisites
 
 You can run Jupyter AI on any system that can run a supported Python version
-from 3.8 to 3.11, including recent Windows, macOS, and Linux versions.
+from 3.8 to 3.12, including recent Windows, macOS, and Linux versions.
 
-If you use `conda`, you can install Python 3.11 in your environment by running:
+If you use `conda`, you can install Python 3.12 in your environment by running:
 
 ```
-conda install python=3.11
+conda install python=3.12
 ```
 
 The `jupyter_ai` package, which provides the lab extension and user interface in
@@ -111,9 +111,9 @@ environment.
 
 First, install
 [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
-and create an environment that uses Python 3.11:
+and create an environment that uses Python 3.12:
 
-    $ conda create -n jupyter-ai python=3.11
+    $ conda create -n jupyter-ai python=3.12
     $ conda activate jupyter-ai
 
 Then, use `conda` to install JupyterLab and Jupyter AI in this Conda environment.
@@ -356,6 +356,10 @@ use in the chat interface.
 GPT4All support is still an early-stage feature, so some bugs may be encountered
 during usage. Our team is still actively improving support for locally-hosted
 models.
+
+### Ollama usage
+
+To get started, follow the instructions on the [Ollama website](https://ollama.com/) to set up `ollama` and download the models locally. To select a model, enter the model name in the settings panel, for example `deepseek-coder-v2`.
 
 ### Asking about something in your notebook
 
@@ -834,6 +838,16 @@ You can see a list of all aliases by running the `%ai list` command.
 Aliases' names can contain ASCII letters (uppercase and lowercase), numbers, hyphens, underscores, and periods. They may not contain colons. They may also not override built-in commands — run `%ai help` for a list of these commands.
 
 Aliases must refer to models or `LLMChain` objects; they cannot refer to other aliases.
+
+To customize the aliases on startup you can set the `c.AiMagics.aliases` tratilet in `ipython_config.py`, for example:
+
+```python
+c.AiMagics.aliases = {
+  "my_custom_alias": "my_provider:my_model"
+}
+```
+
+The location of `ipython_config.py` file is documented in [IPython configuration reference](https://ipython.readthedocs.io/en/stable/config/intro.html).
 
 ### Using magic commands with SageMaker endpoints
 

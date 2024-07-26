@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   Box,
@@ -22,6 +22,7 @@ import {
   HideSource,
   AutoFixNormal
 } from '@mui/icons-material';
+import { ISignal } from '@lumino/signaling';
 
 import { AiService } from '../handler';
 import { SendButton, SendButtonProps } from './chat-input/send-button';
@@ -33,9 +34,8 @@ type ChatInputProps = {
   onSend: (selection?: AiService.Selection) => unknown;
   hasSelection: boolean;
   includeSelection: boolean;
+  focusInputSignal: ISignal<unknown, void>;
   toggleIncludeSelection: () => unknown;
-  replaceSelection: boolean;
-  toggleReplaceSelection: () => unknown;
   sendWithShiftEnter: boolean;
   sx?: SxProps<Theme>;
 };
@@ -130,6 +130,24 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
 
   // controls whether the slash command autocomplete is open
   const [open, setOpen] = useState<boolean>(false);
+
+  // store reference to the input element to enable focusing it easily
+  const inputRef = useRef<HTMLInputElement>();
+
+  /**
+   * Effect: connect the signal emitted on input focus request.
+   */
+  useEffect(() => {
+    const focusInputElement = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+    props.focusInputSignal.connect(focusInputElement);
+    return () => {
+      props.focusInputSignal.disconnect(focusInputElement);
+    };
+  }, []);
 
   /**
    * Effect: Open the autocomplete when the user types a slash into an empty
@@ -280,13 +298,18 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
             {...params}
             fullWidth
             variant="outlined"
+            maxRows={20}
             multiline
             placeholder="Ask Cloudera Copilot"
             onKeyDown={handleKeyDown}
+            inputRef={inputRef}
             InputProps={{
               ...params.InputProps,
               endAdornment: (
-                <InputAdornment position="end">
+                <InputAdornment
+                  position="end"
+                  sx={{ height: 'unset', alignSelf: 'flex-end' }}
+                >
                   <SendButton {...sendButtonProps} />
                 </InputAdornment>
               )
@@ -308,15 +331,6 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
               />
             }
             label="Include selection"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={props.replaceSelection}
-                onChange={props.toggleReplaceSelection}
-              />
-            }
-            label="Replace selection"
           />
         </FormGroup>
       )}

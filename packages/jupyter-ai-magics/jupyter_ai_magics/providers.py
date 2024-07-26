@@ -37,6 +37,7 @@ from langchain_community.llms import (
     Bedrock,
     GPT4All,
     HuggingFaceEndpoint,
+    Ollama,
     SagemakerEndpoint,
     Together,
 )
@@ -485,7 +486,7 @@ class BaseProvider(BaseModel, metaclass=ProviderMetaclass):
         chain = self._create_completion_chain()
         token = completion.token_from_request(request, 0)
         model_arguments = completion.template_inputs_from_request(request)
-        suggestion = ""
+        suggestion = processed_suggestion = ""
 
         # send an incomplete `InlineCompletionReply`, indicating to the
         # client that LLM output is about to streamed across this connection.
@@ -505,17 +506,12 @@ class BaseProvider(BaseModel, metaclass=ProviderMetaclass):
 
         async for fragment in chain.astream(input=model_arguments):
             suggestion += fragment
-            if suggestion.startswith("```"):
-                if "\n" not in suggestion:
-                    # we are not ready to apply post-processing
-                    continue
-                else:
-                    suggestion = completion.post_process_suggestion(suggestion, request)
-            elif suggestion.rstrip().endswith("```"):
-                suggestion = completion.post_process_suggestion(suggestion, request)
+            processed_suggestion = completion.post_process_suggestion(
+                suggestion, request
+            )
             yield InlineCompletionStreamChunk(
                 type="stream",
-                response={"insertText": suggestion, "token": token},
+                response={"insertText": processed_suggestion, "token": token},
                 reply_to=request.number,
                 done=False,
             )
@@ -523,7 +519,7 @@ class BaseProvider(BaseModel, metaclass=ProviderMetaclass):
         # finally, send a message confirming that we are done
         yield InlineCompletionStreamChunk(
             type="stream",
-            response={"insertText": suggestion, "token": token},
+            response={"insertText": processed_suggestion, "token": token},
             reply_to=request.number,
             done=True,
         )
@@ -631,35 +627,6 @@ class HfHubProvider(BaseProvider, HuggingFaceEndpoint):
     auth_strategy = EnvAuthStrategy(name="HUGGINGFACEHUB_API_TOKEN")
     registry = True
 
-    # Override the parent's validate_environment with a custom list of valid tasks
-    @root_validator()
-    def validate_environment(cls, values: Dict) -> Dict:
-        """Validate that api key and python package exists in environment."""
-        try:
-            huggingfacehub_api_token = get_from_dict_or_env(
-                values, "huggingfacehub_api_token", "HUGGINGFACEHUB_API_TOKEN"
-            )
-        except Exception as e:
-            raise ValueError(
-                "Could not authenticate with huggingface_hub. "
-                "Please check your API token."
-            ) from e
-        try:
-            from huggingface_hub import InferenceClient
-
-            values["client"] = InferenceClient(
-                model=values["model"],
-                timeout=values["timeout"],
-                token=huggingfacehub_api_token,
-                **values["server_kwargs"],
-            )
-        except ImportError:
-            raise ValueError(
-                "Could not import huggingface_hub python package. "
-                "Please install it with `pip install huggingface_hub`."
-            )
-        return values
-
     # Handle text and image outputs
     def _call(
         self, prompt: str, stop: Optional[List[str]] = None, **kwargs: Any
@@ -726,6 +693,21 @@ class HfHubProvider(BaseProvider, HuggingFaceEndpoint):
 
     async def _acall(self, *args, **kwargs) -> Coroutine[Any, Any, str]:
         return await self._call_in_executor(*args, **kwargs)
+
+
+class OllamaProvider(BaseProvider, Ollama):
+    id = "ollama"
+    name = "Ollama"
+    model_id_key = "model"
+    help = (
+        "See [https://www.ollama.com/library](https://www.ollama.com/library) for a list of models. "
+        "Pass a model's name; for example, `deepseek-coder-v2`."
+    )
+    models = ["*"]
+    registry = True
+    fields = [
+        TextField(key="base_url", label="Base API URL (optional)", format="text"),
+    ]
 
 
 class JsonContentHandler(LLMContentHandler):
@@ -816,6 +798,8 @@ class BedrockProvider(BaseProvider, Bedrock):
         "meta.llama2-70b-chat-v1",
         "meta.llama3-8b-instruct-v1:0",
         "meta.llama3-70b-instruct-v1:0",
+        "meta.llama3-1-8b-instruct-v1:0",
+        "meta.llama3-1-70b-instruct-v1:0",
         "mistral.mistral-7b-instruct-v0:2",
         "mistral.mixtral-8x7b-instruct-v0:1",
         "mistral.mistral-large-2402-v1:0",

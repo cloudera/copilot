@@ -4,7 +4,12 @@ import os
 from typing import Any, Coroutine, List, Optional, Tuple
 
 from dask.distributed import Client as DaskClient
-from jupyter_ai.document_loaders.directory import arxiv_to_text, get_embeddings, split
+from jupyter_ai.document_loaders.directory import (
+    EXCLUDE_DIRS,
+    arxiv_to_text,
+    get_embeddings,
+    split,
+)
 from jupyter_ai.document_loaders.splitter import ExtensionSplitter, NotebookSplitter
 from jupyter_ai.models import (
     DEFAULT_CHUNK_OVERLAP,
@@ -14,6 +19,7 @@ from jupyter_ai.models import (
     IndexMetadata,
 )
 from jupyter_core.paths import jupyter_data_dir
+from jupyter_core.utils import ensure_dir_exists
 from langchain.schema import BaseRetriever, Document
 from langchain.text_splitter import (
     LatexTextSplitter,
@@ -39,16 +45,44 @@ class LearnChatHandler(BaseChatHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        excluded_dirs = ", ".join(EXCLUDE_DIRS)
         self.parser.prog = "/learn"
-        self.parser.add_argument("-a", "--all-files", action="store_true")
-        self.parser.add_argument("-v", "--verbose", action="store_true")
-        self.parser.add_argument("-d", "--delete", action="store_true")
-        self.parser.add_argument("-l", "--list", action="store_true")
         self.parser.add_argument(
-            "-r", "--remote", action="store", default=None, type=str
+            "-a",
+            "--all-files",
+            action="store_true",
+            help=f"Include hidden files, hidden directories, and excluded directories ({excluded_dirs})",
         )
         self.parser.add_argument(
-            "-c", "--chunk-size", action="store", default=DEFAULT_CHUNK_SIZE, type=int
+            "-v", "--verbose", action="store_true", help="Increase verbosity"
+        )
+        self.parser.add_argument(
+            "-d",
+            "--delete",
+            action="store_true",
+            help="Delete everything previously learned",
+        )
+        self.parser.add_argument(
+            "-l",
+            "--list",
+            action="store_true",
+            help="List directories previously learned",
+        )
+        self.parser.add_argument(
+            "-r",
+            "--remote",
+            action="store",
+            default=None,
+            type=str,
+            help="Learn a remote document; currently only *arxiv* is supported",
+        )
+        self.parser.add_argument(
+            "-c",
+            "--chunk-size",
+            action="store",
+            default=DEFAULT_CHUNK_SIZE,
+            type=int,
+            help="Max number of characters in chunk",
         )
         self.parser.add_argument(
             "-o",
@@ -56,6 +90,7 @@ class LearnChatHandler(BaseChatHandler):
             action="store",
             default=DEFAULT_CHUNK_OVERLAP,
             type=int,
+            help="Number of characters overlapping between chunks, helpful to ensure text is not split mid-word or mid-sentence",
         )
         self.parser.add_argument("path", nargs=argparse.REMAINDER)
         self.index_name = "default"
@@ -63,10 +98,11 @@ class LearnChatHandler(BaseChatHandler):
         self.metadata = IndexMetadata(dirs=[])
         self.prev_em_id = None
 
-        if not os.path.exists(INDEX_SAVE_DIR):
-            os.makedirs(INDEX_SAVE_DIR)
-
+        self._ensure_dirs()
         self._load()
+
+    def _ensure_dirs(self):
+        ensure_dir_exists(INDEX_SAVE_DIR, mode=0o700)
 
     def _load(self):
         """Loads the vector store."""
@@ -118,7 +154,7 @@ class LearnChatHandler(BaseChatHandler):
             if remote_type == "arxiv":
                 try:
                     id = args.path[0]
-                    args.path = [arxiv_to_text(id, self.root_dir)]
+                    args.path = [arxiv_to_text(id, self.output_dir)]
                     self.reply(
                         f"Learning arxiv file with id **{id}**, saved in **{args.path[0]}**.",
                         message,
@@ -142,7 +178,7 @@ class LearnChatHandler(BaseChatHandler):
             self.reply(f"{self.parser.format_usage()}", message)
             return
         short_path = args.path[0]
-        load_path = os.path.join(self.root_dir, short_path)
+        load_path = os.path.join(self.output_dir, short_path)
         if not os.path.exists(load_path):
             response = f"Sorry, that path doesn't exist: {load_path}"
             self.reply(response, message)
@@ -175,7 +211,7 @@ class LearnChatHandler(BaseChatHandler):
         return message
 
     async def learn_dir(
-        self, path: str, chunk_size: int, chunk_overlap: int, all_files: bool
+        self, path: str, chunk_size: int, chunk_overlap: int, all_files: bool = False
     ):
         dask_client: DaskClient = await self.dask_client_future
         splitter_kwargs = {"chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
@@ -267,7 +303,9 @@ class LearnChatHandler(BaseChatHandler):
         for dir in metadata.dirs:
             # TODO: do not relearn directories in serial, but instead
             # concurrently or in parallel
-            await self.learn_dir(dir.path, dir.chunk_size, dir.chunk_overlap)
+            await self.learn_dir(
+                dir.path, dir.chunk_size, dir.chunk_overlap, all_files=False
+            )
 
         self.save()
 

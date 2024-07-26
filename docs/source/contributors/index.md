@@ -18,7 +18,7 @@ Issues and pull requests that violate the above principles may be declined. If y
 
 ## Prerequisites
 
-You can develop Jupyter AI on any system that can run a supported Python version up to and including 3.11, including recent Windows, macOS, and Linux versions.
+You can develop Jupyter AI on any system that can run a supported Python version up to and including 3.12, including recent Windows, macOS, and Linux versions.
 
 Each Jupyter AI major version works with only one major version of JupyterLab. Jupyter AI 1.x supports JupyterLab 3.x, and Jupyter AI 2.x supports JupyterLab 4.x.
 
@@ -35,7 +35,7 @@ Due to a compatibility issue with Webpack, Node.js 18.15.0 does not work with Ju
 After you have installed the prerequisites, create a new conda environment and activate it.
 
 ```
-conda create -n jupyter-ai -c conda-forge python=3.11 nodejs=20
+conda create -n jupyter-ai -c conda-forge python=3.12 nodejs=20
 conda activate jupyter-ai
 ```
 
@@ -95,7 +95,16 @@ refresh your browser tab.
 ## Building documentation
 
 The `./scripts/install.sh` should automatically install the documentation
-dependencies. To build the documentation locally, run
+dependencies. You will need to install [pandoc](https://pandoc.org/) as well. You can install [pandoc from the conda-forge channel](https://anaconda.org/conda-forge/pandoc):
+
+```
+conda install -c conda-forge pandoc
+```
+
+Otherwise have a look at pandoc's [installation instructions](https://pandoc.org/installing.html).
+
+
+To build the documentation locally, run
 
 ```
 cd docs/

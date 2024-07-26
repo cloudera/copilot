@@ -33,6 +33,15 @@ if TYPE_CHECKING:
     from jupyter_ai.handlers import RootChatHandler
 
 
+def get_preferred_dir(root_dir: str, preferred_dir: str) -> Optional[str]:
+    if preferred_dir != "":
+        preferred_dir = os.path.expanduser(preferred_dir)
+        if not preferred_dir.startswith(root_dir):
+            preferred_dir = os.path.join(root_dir, preferred_dir)
+        return os.path.abspath(preferred_dir)
+    return None
+
+
 # Chat handler type, with specific attributes for each
 class HandlerRoutingType(BaseModel):
     routing_method: ClassVar[Union[Literal["slash_command"]]] = ...
@@ -46,6 +55,24 @@ class SlashCommandRoutingType(HandlerRoutingType):
     """Slash ID for routing a chat command to this handler. Only one handler
     may declare a particular slash ID. Must contain only alphanumerics and
     underscores."""
+
+
+class MarkdownHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
+    def _get_help_string(self, action):
+        # do not show "(default: False)" for flags as this is assumed
+        if action.const is True:
+            return action.help
+        return super()._get_help_string(action)
+
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            return super()._format_action_invocation(action)
+        else:
+            action_string = super()._format_action_invocation(action)
+            return f"`{action_string}`:"
+
+    def _format_action(self, action):
+        return "- " + super()._format_action(action)
 
 
 class BaseChatHandler:
@@ -70,6 +97,11 @@ class BaseChatHandler:
     specified by the config. Subclasses should define this. Should be set to
     `False` for handlers like `/help`."""
 
+    supports_help: ClassVar[bool] = True
+    """Class attribute specifying whether this chat handler should
+    parse the arguments and display help when user queries with
+    `-h` or `--help`"""
+
     _requests_count = 0
     """Class attribute set to the number of requests that Cloudera Copilot is
     currently handling."""
@@ -82,6 +114,7 @@ class BaseChatHandler:
         model_parameters: Dict[str, Dict],
         chat_history: List[ChatMessage],
         root_dir: str,
+        preferred_dir: Optional[str],
         dask_client_future: Awaitable[DaskClient],
     ):
         self.log = log
@@ -89,8 +122,16 @@ class BaseChatHandler:
         self._root_chat_handlers = root_chat_handlers
         self.model_parameters = model_parameters
         self._chat_history = chat_history
-        self.parser = argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser(
+            add_help=False, description=self.help, formatter_class=MarkdownHelpFormatter
+        )
+        # the default help would exit; instead implement a custom help
+        if self.__class__.supports_help:
+            self.parser.add_argument(
+                "-h", "--help", action="store_true", help="Show this help message"
+            )
         self.root_dir = os.path.abspath(os.path.expanduser(root_dir))
+        self.preferred_dir = get_preferred_dir(self.root_dir, preferred_dir)
         self.dask_client_future = dask_client_future
         self.llm = None
         self.llm_params = None
@@ -129,6 +170,13 @@ class BaseChatHandler:
                 return
 
         BaseChatHandler._requests_count += 1
+
+        if self.__class__.supports_help:
+            args = self.parse_args(message, silent=True)
+            if args and args.help:
+                self.reply(self.parser.format_help(), message)
+                return
+
         try:
             await self.process_message(message)
         except Exception as e:
@@ -230,6 +278,9 @@ class BaseChatHandler:
         """
         Closes a pending message.
         """
+        if pending_msg.closed:
+            return
+
         close_pending_msg = ClosePendingMessage(
             id=pending_msg.id,
         )
@@ -241,6 +292,8 @@ class BaseChatHandler:
             handler.broadcast_message(close_pending_msg)
             break
 
+        pending_msg.closed = True
+
     @contextlib.contextmanager
     def pending(self, text: str, ellipsis: bool = True):
         """
@@ -249,9 +302,10 @@ class BaseChatHandler:
         """
         pending_msg = self.start_pending(text, ellipsis=ellipsis)
         try:
-            yield
+            yield pending_msg
         finally:
-            self.close_pending(pending_msg)
+            if not pending_msg.closed:
+                self.close_pending(pending_msg)
 
     def get_llm_chain(self):
         lm_provider = self.config_manager.lm_provider
@@ -293,12 +347,22 @@ class BaseChatHandler:
     ):
         raise NotImplementedError("Should be implemented by subclasses")
 
-    def parse_args(self, message):
+    def parse_args(self, message, silent=False):
         args = message.body.split(" ")
         try:
             args = self.parser.parse_args(args[1:])
         except (argparse.ArgumentError, SystemExit) as e:
-            response = f"{self.parser.format_usage()}"
-            self.reply(response, message)
+            if not silent:
+                response = f"{self.parser.format_usage()}"
+                self.reply(response, message)
             return None
         return args
+
+    @property
+    def output_dir(self) -> str:
+        # preferred dir is preferred, but if it is not specified,
+        # or if user removed it after startup, fallback to root.
+        if self.preferred_dir and os.path.exists(self.preferred_dir):
+            return self.preferred_dir
+        else:
+            return self.root_dir

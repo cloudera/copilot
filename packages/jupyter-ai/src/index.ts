@@ -21,14 +21,22 @@ import { statusItemPlugin } from './status';
 import { IJaiCompletionProvider } from './tokens';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ActiveCellManager } from './contexts/active-cell-context';
+import { Signal } from '@lumino/signaling';
 
 export type DocumentTracker = IWidgetTracker<IDocumentWidget>;
+
+export namespace CommandIDs {
+  /**
+   * Command to focus the input.
+   */
+  export const focusChatInput = 'jupyter-ai:focus-chat-input';
+}
 
 /**
  * Initialization data for the jupyter_ai extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'jupyter_ai:plugin',
+  id: '@jupyter-ai/core:plugin',
   autoStart: true,
   optional: [
     IGlobalAwareness,
@@ -66,7 +74,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
       });
     };
 
-    let chatWidget: ReactWidget | null = null;
+    const focusInputSignal = new Signal<unknown, void>({});
+
+    let chatWidget: ReactWidget;
     try {
       await chatHandler.initialize();
       chatWidget = buildChatSidebar(
@@ -77,7 +87,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
         rmRegistry,
         completionProvider,
         openInlineCompleterSettings,
-        activeCellManager
+        activeCellManager,
+        focusInputSignal
       );
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);
@@ -91,6 +102,15 @@ const plugin: JupyterFrontEndPlugin<void> = {
     if (restorer) {
       restorer.add(chatWidget, 'jupyter-ai-chat');
     }
+
+    // Define jupyter-ai commands
+    app.commands.addCommand(CommandIDs.focusChatInput, {
+      execute: () => {
+        app.shell.activateById(chatWidget.id);
+        focusInputSignal.emit();
+      },
+      label: 'Focus the jupyter-ai chat'
+    });
   }
 };
 
