@@ -2,14 +2,15 @@
 
 To fetch the latest changes from Jupyter AI, do the following:
 
-First, add the public repository as a remote:
+First, add the public repository as a remote and fetch it:
 ```bash
 git remote add public https://github.com/jupyterlab/jupyter-ai
+git fetch public
 ```
 
-Then, figure out the latest stable release. At the time of writing this, it is v2.18.1. Afterwards, you can merge the changes:
+Then, figure out the latest stable release. At the time of writing this, it is v2.19.1. Afterwards, you can merge the changes:
 ```bash
-git merge public/main@{v2.18.1}
+git merge public/main@{v2.19.1}
 ```
 
 # Jupyter AI
