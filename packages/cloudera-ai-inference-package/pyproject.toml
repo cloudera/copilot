@@ -1,0 +1,9 @@
+[project]
+name = "cloudera_ai_inference_package"
+version = "0.0.1"
+
+[project.entry-points."jupyter_ai.model_providers"]
+cloudera-ai-inference-language-model-provider = "cloudera_ai_inference_package.cloudera_ai_inference_provider:ClouderaAIInferenceLanguageModelProvider"
+
+[project.entry-points."jupyter_ai.embeddings_model_providers"]
+cloudera-ai-inference-embedding-model-provider = "cloudera_ai_inference_package.cloudera_ai_embedding_provider:ClouderaAIInferenceEmbeddingModelProvider"

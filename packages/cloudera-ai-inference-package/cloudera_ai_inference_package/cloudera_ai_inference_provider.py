@@ -17,32 +17,17 @@ from langchain_core.messages.ai import AIMessageChunk
 from langchain_core.outputs import ChatGenerationChunk
 from langchain_core.runnables.config import RunnableConfig
 
-def getCopilotModels(config_dir):
-    if not config_dir or not os.path.exists(config_dir):
-        return [], []
+from cloudera_ai_inference_package.model_discovery import getCopilotModels
 
-    f = open(config_dir)
-    copilot_config = json.load(f)
-    ai_inference_models = []
-    if copilot_config and "aiInferenceModels" in copilot_config and copilot_config["aiInferenceModels"]:
-        ai_inference_models = copilot_config['aiInferenceModels']
-    f.close()
 
-    models = []
-
-    for ai_inference_model in ai_inference_models:
-        models.append(ai_inference_model['name'])
-
-    return ai_inference_models, models
-
-class ClouderaAIInferenceProvider(BaseProvider, SimpleChatModel, LLM):
+class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LLM):
     id = "cloudera"
     name = "Cloudera AI Inference Provider"
     model = ""
     model_id_key = ""
 
     copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR") or ""
-    ai_inference_models, models = getCopilotModels(copilot_config_dir)
+    ai_inference_models, models = getCopilotModels(copilot_config_dir, model_type="inference")
     cdp_cli_path = "/Users/gavan/Library/Python/3.9/bin/cdp"
     # "/home/cdsw/.local/bin/cdp"
 
