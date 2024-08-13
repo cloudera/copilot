@@ -25,8 +25,8 @@ from jupyter_ai.models import (
     HumanChatMessage,
     PendingMessage,
 )
-from jupyter_ai_magics import Persona
 from jupyter_ai_magics.providers import BaseProvider
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from langchain.pydantic_v1 import BaseModel
 
 if TYPE_CHECKING:

@@ -1,6 +1,7 @@
 from typing import Dict, Type
 
 from jupyter_ai.models import CellWithErrorSelection, HumanChatMessage
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
@@ -101,4 +102,13 @@ class FixChatHandler(BaseChatHandler):
                 error_value=selection.error.value,
                 traceback="\n".join(selection.error.traceback),
             )
+            ut = UsageTracker()
+            ut._SendCopilotEvent({
+                "event_details": "/fix",
+                "event_type": "slash",
+                "model_type": "language",
+                "model_name": self.llm.model_id,
+                "model_provider_id": self.config_manager.lm_provider.id,
+                "prompt_word_count": len(extra_instructions)
+            })
         self.reply(response, message)

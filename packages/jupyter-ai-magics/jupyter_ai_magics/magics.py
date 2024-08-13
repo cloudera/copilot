@@ -13,6 +13,7 @@ from IPython import get_ipython
 from IPython.core.magic import Magics, line_cell_magic, magics_class
 from IPython.display import HTML, JSON, Markdown, Math
 from jupyter_ai_magics.aliases import MODEL_ID_ALIASES
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.utils import decompose_model_id, get_lm_providers
 from langchain.chains import LLMChain
 from langchain.schema import HumanMessage
@@ -562,6 +563,7 @@ class AiMagics(Magics):
 
         provider = Provider(**provider_params, **model_parameters)
 
+        orig_prompt = prompt
         # Apply a prompt template.
         prompt = provider.get_prompt_template(args.format).format(prompt=prompt)
 
@@ -570,6 +572,14 @@ class AiMagics(Magics):
         prompt = prompt.format_map(FormatDict(ip.user_ns))
 
         if provider.is_chat_provider:
+            ut = UsageTracker()
+            ut._SendCopilotEvent({
+                "event_type": "magic",
+                "model_type": "language",
+                "model_name": local_model_id,
+                "model_provider_id": provider_id,
+                "prompt_word_count": len(orig_prompt.split(" ")),
+            })
             result = provider.generate([[HumanMessage(content=prompt)]])
         else:
             # generate output from model via provider

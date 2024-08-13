@@ -2,6 +2,7 @@ import argparse
 from typing import Dict, Type
 
 from jupyter_ai.models import HumanChatMessage
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
@@ -72,6 +73,15 @@ class AskChatHandler(BaseChatHandler):
 
         try:
             with self.pending("Searching learned documents"):
+                ut = UsageTracker()
+                ut._SendCopilotEvent({
+                    "event_details": "/ask",
+                    "event_type": "slash",
+                    "model_type": "language",
+                    "model_name": self.llm.model_id,
+                    "model_provider_id": self.config_manager.lm_provider.id,
+                    "prompt_word_count": len(args.query),
+                })
                 result = await self.llm_chain.acall({"question": query})
                 response = result["answer"]
             self.reply(response, message)

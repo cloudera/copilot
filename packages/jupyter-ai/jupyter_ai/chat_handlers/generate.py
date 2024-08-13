@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Type
 import nbformat
 from jupyter_ai.chat_handlers import BaseChatHandler, SlashCommandRoutingType
 from jupyter_ai.models import HumanChatMessage
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.chains import LLMChain
 from langchain.llms import BaseLLM
@@ -267,6 +268,16 @@ class GenerateChatHandler(BaseChatHandler):
         # first send a verification message to user
         response = "👍 Great, I will get started on your notebook. It may take a few minutes, but I will reply here when the notebook is ready. In the meantime, you can continue to ask me other questions."
         self.reply(response, message)
+
+        ut = UsageTracker()
+        ut._SendCopilotEvent({
+            "event_details": "/generate",
+            "event_type": "slash",
+            "model_type": "language",
+            "model_name": self.llm.model_id,
+            "model_provider_id": self.config_manager.lm_provider.id,
+            "prompt_word_count": len(message.body.split(" "))
+        })
 
         final_path = await self._generate_notebook(prompt=message.body)
         response = f"""🎉 I have created your notebook and saved it to the location {final_path}. I am still learning how to create notebooks, so please review all code before running it."""

@@ -7,6 +7,7 @@ from jupyter_ai.models import (
     AgentStreamMessage,
     HumanChatMessage,
 )
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.providers import BaseProvider
 from langchain_core.messages import AIMessageChunk
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -98,6 +99,14 @@ class DefaultChatHandler(BaseChatHandler):
 
         # start with a pending message
         with self.pending("Generating response") as pending_message:
+            ut = UsageTracker()
+            ut._SendCopilotEvent({
+                "event_type": "chat",
+                "model_type": "language",
+                "model_name": self.llm.model_id,
+                "model_provider_id": self.config_manager.lm_provider.id,
+                "prompt_word_count": len(message.body.split(" "))
+            })
             # stream response in chunks. this works even if a provider does not
             # implement streaming, as `astream()` defaults to yielding `_call()`
             # when `_stream()` is not implemented on the LLM class.

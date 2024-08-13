@@ -18,6 +18,7 @@ from jupyter_ai.models import (
     IndexedDir,
     IndexMetadata,
 )
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_core.paths import jupyter_data_dir
 from jupyter_core.utils import ensure_dir_exists
 from langchain.schema import BaseRetriever, Document
@@ -189,6 +190,16 @@ class LearnChatHandler(BaseChatHandler):
 
         with self.pending(f"Loading and splitting files for {load_path}"):
             try:
+                _, em_provider_args = self.get_embedding_provider()
+                ut = UsageTracker()
+                ut._SendCopilotEvent({
+                    "event_details": "/learn",
+                    "event_type": "slash",
+                    "model_type": "embeddings",
+                    "model_name": em_provider_args["model_id"],
+                    "model_provider_id": self.config_manager.em_provider.id
+                })
+
                 await self.learn_dir(
                     load_path, args.chunk_size, args.chunk_overlap, args.all_files
                 )
