@@ -129,5 +129,5 @@ class DefaultChatHandler(BaseChatHandler):
                     self.log.error(f"Unrecognized type of chunk yielded: {type(chunk)}")
                     break
 
-        # complete stream after all chunks have been streamed
-        self._send_stream_chunk(stream_id, "", complete=True)
+            # complete stream after all chunks have been streamed
+            self._send_stream_chunk(stream_id, "", complete=True)
