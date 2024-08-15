@@ -5,9 +5,6 @@ import {
   SxProps,
   TextField,
   Theme,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   InputAdornment,
   Typography,
   Autocomplete
@@ -27,17 +24,18 @@ import { ISignal } from '@lumino/signaling';
 import { AiService } from '../handler';
 import { SendButton, SendButtonProps } from './chat-input/send-button';
 import { useActiveCellContext } from '../contexts/active-cell-context';
+import { ChatHandler } from '../chat_handler';
 
 type ChatInputProps = {
-  value: string;
-  onChange: (newValue: string) => unknown;
-  onSend: (selection?: AiService.Selection) => unknown;
-  hasSelection: boolean;
-  includeSelection: boolean;
+  chatHandler: ChatHandler;
   focusInputSignal: ISignal<unknown, void>;
-  toggleIncludeSelection: () => unknown;
   sendWithShiftEnter: boolean;
   sx?: SxProps<Theme>;
+  /**
+   * Name of the persona, set by the selected chat model. This defaults to
+   * `'Jupyternaut'`, but can differ for custom providers.
+   */
+  personaName: string;
 };
 
 type SlashCommandOption = {
@@ -100,6 +98,7 @@ function renderSlashCommandOption(
 }
 
 export function ChatInput(props: ChatInputProps): JSX.Element {
+  const [input, setInput] = useState('');
   const [slashCommandOptions, setSlashCommandOptions] = useState<
     SlashCommandOption[]
   >([]);
@@ -154,24 +153,24 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
    * chat input. Close the autocomplete when the user clears the chat input.
    */
   useEffect(() => {
-    if (props.value === '/') {
+    if (input === '/') {
       setOpen(true);
       return;
     }
 
-    if (props.value === '') {
+    if (input === '') {
       setOpen(false);
       return;
     }
-  }, [props.value]);
+  }, [input]);
 
   /**
    * Effect: Set current slash command
    */
   useEffect(() => {
-    const matchedSlashCommand = props.value.match(/^\s*\/\w+/);
+    const matchedSlashCommand = input.match(/^\s*\/\w+/);
     setCurrSlashCommand(matchedSlashCommand && matchedSlashCommand[0]);
-  }, [props.value]);
+  }, [input]);
 
   /**
    * Effect: ensure that the `highlighted` is never `true` when `open` is
@@ -185,27 +184,30 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
     }
   }, [open, highlighted]);
 
-  // TODO: unify the `onSend` implementation in `chat.tsx` and here once text
-  // selection is refactored.
-  function onSend() {
-    // case: /fix
+  function onSend(selection?: AiService.Selection) {
+    const prompt = input;
+    setInput('');
+
+    // if the current slash command is `/fix`, we always include a code cell
+    // with error output in the selection.
     if (currSlashCommand === '/fix') {
       const cellWithError = activeCell.manager.getContent(true);
       if (!cellWithError) {
         return;
       }
 
-      props.onSend({
-        ...cellWithError,
-        type: 'cell-with-error'
+      props.chatHandler.sendMessage({
+        prompt,
+        selection: { ...cellWithError, type: 'cell-with-error' }
       });
       return;
     }
 
-    // default case
-    props.onSend();
+    // otherwise, send a ChatRequest with the prompt and selection
+    props.chatHandler.sendMessage({ prompt, selection });
   }
 
+  const inputExists = !!input.trim();
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key !== 'Enter') {
       return;
@@ -214,6 +216,12 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
     // do not send the message if the user was just trying to select a suggested
     // slash command from the Autocomplete component.
     if (highlighted) {
+      return;
+    }
+
+    if (!inputExists) {
+      event.stopPropagation();
+      event.preventDefault();
       return;
     }
 
@@ -239,7 +247,6 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
     </span>
   );
 
-  const inputExists = !!props.value.trim();
   const sendButtonProps: SendButtonProps = {
     onSend,
     sendWithShiftEnter: props.sendWithShiftEnter,
@@ -253,9 +260,9 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
       <Autocomplete
         autoHighlight
         freeSolo
-        inputValue={props.value}
+        inputValue={input}
         onInputChange={(_, newValue: string) => {
-          props.onChange(newValue);
+          setInput(newValue);
         }}
         onHighlightChange={
           /**
@@ -300,7 +307,7 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
             variant="outlined"
             maxRows={20}
             multiline
-            placeholder="Ask Cloudera Copilot"
+            placeholder={`Ask ${props.personaName}`}
             onKeyDown={handleKeyDown}
             inputRef={inputRef}
             InputProps={{
@@ -317,23 +324,10 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
             FormHelperTextProps={{
               sx: { marginLeft: 'auto', marginRight: 0 }
             }}
-            helperText={props.value.length > 2 ? helperText : ' '}
+            helperText={input.length > 2 ? helperText : ' '}
           />
         )}
       />
-      {props.hasSelection && (
-        <FormGroup sx={{ display: 'flex', flexDirection: 'row' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={props.includeSelection}
-                onChange={props.toggleIncludeSelection}
-              />
-            }
-            label="Include selection"
-          />
-        </FormGroup>
-      )}
     </Box>
   );
 }

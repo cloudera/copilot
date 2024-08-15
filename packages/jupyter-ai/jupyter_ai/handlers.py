@@ -248,12 +248,17 @@ class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):
             self.log.error(e)
             return
 
+        message_body = chat_request.prompt
+        if chat_request.selection:
+            message_body += f"\n\n```\n{chat_request.selection.source}\n```\n"
+
         # message broadcast to chat clients
         chat_message_id = str(uuid.uuid4())
         chat_message = HumanChatMessage(
             id=chat_message_id,
             time=time.time(),
-            body=chat_request.prompt,
+            body=message_body,
+            prompt=chat_request.prompt,
             selection=chat_request.selection,
             client=self.chat_client,
         )
@@ -371,7 +376,6 @@ class ModelProviderHandler(ProviderHandler):
 
         # Read enabled models from config file.
         models = self.getConfiguredThirdPartyModels()
-        configured_model_names = [model['name'] for model in models] if models else []
 
         # Step 1: gather providers
         for provider in self.lm_providers.values():
@@ -379,7 +383,9 @@ class ModelProviderHandler(ProviderHandler):
                 continue
 
             if "bedrock" in provider.id:
-                enabled_models = [model for model in provider.models if model in configured_model_names]
+                configured_models_names = [
+                    model['name'] for model in models if model['provider_id'] == provider.id] if models else []
+                enabled_models = [model for model in provider.models if model in configured_models_names]
             else:
                 enabled_models = provider.models
 

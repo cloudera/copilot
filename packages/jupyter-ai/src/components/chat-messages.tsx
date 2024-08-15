@@ -10,10 +10,12 @@ import { AiService } from '../handler';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { useCollaboratorsContext } from '../contexts/collaborators-context';
 import { ChatMessageMenu } from './chat-messages/chat-message-menu';
+import { IJaiMessageFooter } from '../tokens';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
   messages: AiService.ChatMessage[];
+  messageFooter: IJaiMessageFooter | null;
 };
 
 type ChatMessageHeaderProps = {
@@ -201,11 +203,6 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
       }}
     >
       {sortedMessages.map(message => {
-        // render selection in HumanChatMessage, if any
-        const markdownStr =
-          message.type === 'human' && message.selection
-            ? message.body + '\n\n```\n' + message.selection.source + '\n```\n'
-            : message.body;
         return (
           <Box key={message.id} sx={{ padding: 4 }}>
             <ChatMessageHeader
@@ -215,11 +212,14 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
             />
             <RendermimeMarkdown
               rmRegistry={props.rmRegistry}
-              markdownStr={markdownStr}
+              markdownStr={message.body}
               complete={
                 message.type === 'agent-stream' ? !!message.complete : true
               }
             />
+            {props.messageFooter && (
+              <props.messageFooter.component message={message} />
+            )}
           </Box>
         );
       })}
