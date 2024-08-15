@@ -106,6 +106,7 @@ class FixChatHandler(BaseChatHandler):
             ut._SendCopilotEvent({
                 "event_details": "/fix",
                 "event_type": "slash",
+                "include_selection": message.selection is not None,
                 "model_type": "language",
                 "model_name": self.llm.model_id,
                 "model_provider_id": self.config_manager.lm_provider.id,

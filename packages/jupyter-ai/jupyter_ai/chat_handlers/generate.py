@@ -274,6 +274,7 @@ class GenerateChatHandler(BaseChatHandler):
             "event_details": "/generate",
             "event_type": "slash",
             "model_type": "language",
+            "include_selection": message.selection is not None,
             "model_name": self.llm.model_id,
             "model_provider_id": self.config_manager.lm_provider.id,
             "prompt_word_count": len(message.body.split(" "))

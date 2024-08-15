@@ -195,6 +195,7 @@ class LearnChatHandler(BaseChatHandler):
                 ut._SendCopilotEvent({
                     "event_details": "/learn",
                     "event_type": "slash",
+                    "include_selection": message.selection is not None,
                     "model_type": "embeddings",
                     "model_name": em_provider_args["model_id"],
                     "model_provider_id": self.config_manager.em_provider.id
