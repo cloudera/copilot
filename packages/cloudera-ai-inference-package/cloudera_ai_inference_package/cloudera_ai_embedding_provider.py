@@ -63,7 +63,7 @@ class ClouderaAIInferenceEmbeddingModelProvider(BaseEmbeddingsProvider, Embeddin
 
         access_token = getAccessToken(self.jwt_path)
         headers = {"Content-Type": "application/json",
-                   "Bearer": access_token}
+                   "Authorization": f"Bearer {access_token}"}
         try:
             response = requests.post(self.model_endpoint, headers=headers, data=payload)
         except Exception as e:

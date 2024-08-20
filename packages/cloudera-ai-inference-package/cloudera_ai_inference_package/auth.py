@@ -1,7 +1,8 @@
 import logging
 import json
+import os
 
-def getJwt(jwt_path: str):
+def getAccessToken(jwt_path: str):
     if not os.path.exists(jwt_path):
         logging.error(f"{jwt_path} not found.")
         return None
