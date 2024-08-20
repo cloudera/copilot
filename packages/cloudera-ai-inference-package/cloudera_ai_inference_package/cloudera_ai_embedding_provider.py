@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 
 import requests
 from jupyter_ai_magics import BaseEmbeddingsProvider
 from langchain_core.embeddings import Embeddings
 
+from cloudera_ai_inference_package.auth import getAccessToken
 from cloudera_ai_inference_package.error_messages import CopilotErrorMessages
 from cloudera_ai_inference_package.model_discovery import getCopilotModels
 
@@ -13,8 +15,9 @@ class ClouderaAIInferenceEmbeddingModelProvider(BaseEmbeddingsProvider, Embeddin
     id = "cloudera"
     name = "Cloudera AI Embedding Provider"
     model_id_key = "model_id"
-    # TODO DSE-38111 change to OPENAI for OPENAI API syntax.
-    API_SYNTAX = "NIM"
+    jwt_path = '/tmp/jwt'
+
+    API_SYNTAX = "OPENAI"
     ai_inference_models, models = getCopilotModels(
         os.getenv("COPILOT_CONFIG_DIR", ""), model_type="embedding"
     )
@@ -58,8 +61,9 @@ class ClouderaAIInferenceEmbeddingModelProvider(BaseEmbeddingsProvider, Embeddin
                 CopilotErrorMessages.INTERNAL_ERROR, {"API_SYNTAX": self.API_SYNTAX}
             )
 
-        # TODO: DSE-38111 add the proper auth headers here.
-        headers = {"Content-Type": "application/json"}
+        access_token = getAccessToken(self.jwt_path)
+        headers = {"Content-Type": "application/json",
+                   "Bearer": access_token}
         try:
             response = requests.post(self.model_endpoint, headers=headers, data=payload)
         except Exception as e:

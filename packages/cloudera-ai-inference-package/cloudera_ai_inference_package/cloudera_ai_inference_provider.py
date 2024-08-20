@@ -17,6 +17,7 @@ from langchain_core.messages.ai import AIMessageChunk
 from langchain_core.outputs import ChatGenerationChunk
 from langchain_core.runnables.config import RunnableConfig
 
+from cloudera_ai_inference_package.auth import getAccessToken
 from cloudera_ai_inference_package.model_discovery import getCopilotModels
 
 
@@ -28,60 +29,12 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
 
     copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR") or ""
     ai_inference_models, models = getCopilotModels(copilot_config_dir, model_type="inference")
-    cdp_cli_path = "/Users/gavan/Library/Python/3.9/bin/cdp"
-    # "/home/cdsw/.local/bin/cdp"
-
-    MultiEnvAuthStrategy(names=["CDP_PRIVATE_KEY", "CDP_ACCESS_KEY_ID", "CDP_REGION", "CDP_ENDPOINT_URL", "ENDPOINT_URL"])
-
-    def WriteParamsToCDPConfig(self, cdp_private_key, cdp_access_key_id, cdp_region, endpoint_url, cdp_endpoint_url):
-        logging.error("Writing params to CDP config.")
-        if not os.path.exists(self.cdp_cli_path):
-            return False
-        completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "cdp_private_key", cdp_private_key])
-        if completed_process.returncode != 0:
-            return False
-        completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "cdp_access_key_id", cdp_access_key_id])
-        if completed_process.returncode != 0:
-            return False
-        completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "cdp_region", cdp_region])
-        if completed_process.returncode != 0:
-            return False
-        completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "endpoint_url", endpoint_url])
-        if completed_process.returncode != 0:
-            return False
-
-        completed_process = subprocess.run([self.cdp_cli_path, "configure", "set", "cdp_endpoint_url", cdp_endpoint_url])
-        return completed_process.returncode == 0
-
-    def GetCDPToken(self):
-        if not os.path.exists(self.cdp_cli_path):
-            logging.error("CDP CLI is not installed. Please install by running the command 'pip install cdpcli' in Terminal Access.")
-            return None
-        logging.error("Found CDP CLI")
-
-        completed_process = subprocess.run([self.cdp_cli_path, "iam", "generate-workload-auth-token", "--workload-name", "DE"], capture_output = True, text = True)
-        try:
-            completed_process.check_returncode()
-        except:
-            logging.error("Unable to get CDP Token.")
-            return None
-
-        response = json.loads(completed_process.stdout)
-        return response['token']
+    jwt_path = '/tmp/jwt'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model = kwargs.get("model_id")
         logging.basicConfig(filename="copilot.txt", level=logging.DEBUG, format="")
-        cdp_private_key = os.getenv("CDP_PRIVATE_KEY")
-        cdp_access_key_id = os.getenv("CDP_ACCESS_KEY_ID")
-        cdp_region = os.getenv("CDP_REGION")
-        endpoint_url = os.getenv("ENDPOINT_URL")
-        cdp_endpoint_url = os.getenv("CDP_ENDPOINT_URL")
-        cdp_cli_path = self.cdp_cli_path
-        if not (cdp_private_key and cdp_access_key_id and cdp_region and cdp_endpoint_url and endpoint_url and cdp_cli_path):
-            return
-        self.WriteParamsToCDPConfig(cdp_private_key, cdp_access_key_id, cdp_region, endpoint_url, cdp_endpoint_url)
 
     @property
     def _llm_type(self) -> str:
@@ -131,10 +84,10 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
             logging.error("Unable to find endpoint: " + self.model)
             return "Error: unable to find endpoint: " + self.model
 
-        cdp_token = self.GetCDPToken()
-        if not cdp_token:
-            logging.error("Unable to get CDP Token.")
-            return "Unable to get CDP Token. Please install CDP CLI by running the command 'pip install cdpcli' in Terminal Access and make sure all required environment variables are set. See https://docs.cloudera.com/r/jupyter-copilot for more details."
+        access_token = getAccessToken(self.jwt_path)
+        if not access_token:
+            logging.error("Unable to get user session JWT.")
+            return "Unable to get user session JWT."
 
         if inference_endpoint.find("chat/completions") != -1:
             # OpenAI Chat completions API
@@ -147,7 +100,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
                     inference_endpoint,
                     data=json.dumps(request),
                     headers={'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + cdp_token},
+                    'Authorization': 'Bearer ' + access_token},
                     verify=True,
                     stream=True
                 )
@@ -178,7 +131,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
                     inference_endpoint,
                     data = my_req_data,
                     headers={'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + cdp_token},
+                    'Authorization': 'Bearer ' + access_token},
                     verify=True,
                     stream=True
                 )
@@ -209,10 +162,10 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
             logging.error("Unable to find endpoint: " + self.model)
             return "Error: unable to find endpoint: " + self.model
 
-        cdp_token = self.GetCDPToken()
-        if not cdp_token:
-            logging.error("Unable to get CDP Token.")
-            return "Unable to get CDP Token. Please install CDP CLI by running the command 'pip install cdpcli' in Terminal Access and make sure all required environment variables are set. See https://docs.cloudera.com/r/jupyter-copilot for more details."
+        access_token = getAccessToken(self.jwt_path)
+        if not access_token:
+            logging.error("Unable to get user session JWT.")
+            return "Unable to get user session JWT."
 
         if inference_endpoint.find("chat/completions") != -1:
             # OpenAI Chat completions API
@@ -223,7 +176,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
                 r = requests.post(inference_endpoint,
                                   data=json.dumps(request),
                                   headers={'Content-Type': 'application/json',
-                                  'Authorization': 'Bearer ' + cdp_token},
+                                  'Authorization': 'Bearer ' + access_token},
                                   verify=True,
                                   stream=False)
                 rjson = r.json()
@@ -245,7 +198,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
                     inference_endpoint,
                     data = json.dumps(request),
                     headers={'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + cdp_token},
+                    'Authorization': 'Bearer ' + access_token},
                     verify=True,
                     stream=False
                 )
