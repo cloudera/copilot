@@ -1,5 +1,6 @@
 import { useActiveCellContext } from '../contexts/active-cell-context';
 import { useSelectionContext } from '../contexts/selection-context';
+import { AiService } from '../handler';
 
 export type UseReplaceReturn = {
   /**
@@ -32,11 +33,15 @@ export function useReplace(): UseReplaceReturn {
   const activeCell = useActiveCellContext();
 
   const replace = (value: string) => {
+    let usageRequest: AiService.UsageRequest = { command: 'replace'};
     if (textSelection) {
       replaceTextSelection({ ...textSelection, text: value });
+      usageRequest.target = 'selection';
     } else if (activeCell.exists) {
       activeCell.manager.replace(value);
+      usageRequest.target = 'cell';
     }
+    AiService.trackUsage(usageRequest);
   };
 
   const replaceDisabled = !(textSelection || activeCell.exists);

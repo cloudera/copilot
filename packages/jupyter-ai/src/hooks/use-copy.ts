@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 
+import { AiService } from '../handler';
+
 export enum CopyStatus {
   None,
   Copying,
@@ -72,6 +74,10 @@ export function useCopy(props?: UseCopyProps): UseCopyReturn {
         () => setCopyStatus(CopyStatus.None),
         1000
       );
+      let usageRequest: AiService.UsageRequest = {
+        command: 'copy'
+      };
+      AiService.trackUsage(usageRequest);
     },
     [copyStatus]
   );

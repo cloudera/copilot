@@ -9,6 +9,8 @@ import { IError as CellError } from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
 import { Signal } from '@lumino/signaling';
 
+import { AiService } from '../handler';
+
 function getNotebook(widget: Widget | null): Notebook | null {
   if (!(widget instanceof DocumentWidget)) {
     return null;
@@ -178,6 +180,11 @@ export class ActiveCellManager {
      * meaning that this is likely unavoidable.
      */
     activeCell.editor?.model.sharedModel.setSource(content);
+    let usageRequest: AiService.UsageRequest = {
+      command: 'insert',
+      target: 'cell'
+    };
+    AiService.trackUsage(usageRequest);
   }
 
   protected _pollActiveCell(): void {

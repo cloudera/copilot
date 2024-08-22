@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import tornado
 from jupyter_ai.chat_handlers import BaseChatHandler, SlashCommandRoutingType
 from jupyter_ai.config_manager import ConfigManager, KeyEmptyError, WriteConflictError
+from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_server.base.handlers import APIHandler as BaseAPIHandler
 from jupyter_server.base.handlers import JupyterHandler
 from langchain.pydantic_v1 import ValidationError
@@ -61,6 +62,22 @@ class ChatHistoryHandler(BaseAPIHandler):
             messages=self.chat_history, pending_messages=self.pending_messages
         )
         self.finish(history.json())
+
+
+class UsageTrackingHandler(BaseAPIHandler):
+    """Handler to record usage tracking information"""
+
+    @tornado.web.authenticated
+    async def post(self):
+        input_data = self.get_json_body()
+        command = input_data["command"] if "command" in input_data else ""
+        target = input_data["target"] if "target" in input_data else ""
+        ut = UsageTracker()
+        ut._SendCopilotEvent({
+            "event_details": target,
+            "event_type": command,
+        })
+        self.finish("")
 
 
 class RootChatHandler(JupyterHandler, websocket.WebSocketHandler):

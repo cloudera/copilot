@@ -33,6 +33,7 @@ from .handlers import (
     ModelProviderHandler,
     RootChatHandler,
     SlashCommandsInfoHandler,
+    UsageTrackingHandler,
 )
 
 CLOUDERA_COPILOT_AVATAR_ROUTE = ClouderaCopilotPersona.avatar_route
@@ -52,6 +53,7 @@ class AiExtension(ExtensionApp):
         (r"api/ai/providers?", ModelProviderHandler),
         (r"api/ai/providers/embeddings?", EmbeddingsModelProviderHandler),
         (r"api/ai/completion/inline/?", DefaultInlineCompletionHandler),
+        (r"api/ai/usage/?", UsageTrackingHandler),
         # serve the default persona avatar at this path.
         # the `()` at the end of the URL denotes an empty regex capture group,
         # required by Tornado.

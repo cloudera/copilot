@@ -211,6 +211,11 @@ export namespace AiService {
     return requestAPI<DescribeConfigResponse>('config');
   }
 
+  export type UsageRequest = {
+    command: string;
+    target?: string | null;
+  }
+
   export type EnvAuthStrategy = {
     type: 'env';
     name: string;
@@ -284,6 +289,15 @@ export namespace AiService {
     return requestAPI<void>('config', {
       method: 'POST',
       body: JSON.stringify(config)
+    });
+  }
+
+  export async function trackUsage(
+    usageRequest: UsageRequest
+  ): Promise<void> {
+    return requestAPI<void>('usage', {
+      method: 'POST',
+      body: JSON.stringify(usageRequest)
     });
   }
 
