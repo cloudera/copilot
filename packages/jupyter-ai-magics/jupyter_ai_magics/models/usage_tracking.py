@@ -26,7 +26,6 @@ class FakeCMLAPI(object):
 try:
     import cmlapi
 except ImportError as e:
-    print("Cannot find cmlapi module, please install it first.")
     cmlapi = FakeCMLAPI
 
 class Singleton:
