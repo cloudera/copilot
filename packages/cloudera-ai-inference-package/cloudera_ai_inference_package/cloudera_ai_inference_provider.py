@@ -115,7 +115,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
                 if decoded_line == "[DONE]":
                     break
                 line_json = json.loads(decoded_line)
-                if "choices" in line_json and "delta" in line_json["choices"][0] and "content" in line_json["choices"][0]["delta"]:
+                if "choices" in line_json and "delta" in line_json["choices"][0] and "content" in line_json["choices"][0]["delta"] and line_json["choices"][0]["delta"]["content"]:
                     yield ChatGenerationChunk(message=AIMessageChunk(content=line_json["choices"][0]["delta"]["content"]))
         elif inference_endpoint.find("completions") != -1:
             # OpenAI Completions API
