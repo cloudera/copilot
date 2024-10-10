@@ -37,7 +37,7 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "amazon.titan-embed-text-v2:0"
+      "model": "amazon.titan-embed-text-v2:0",
       "provider_id": "bedrock"
     }
   ]
