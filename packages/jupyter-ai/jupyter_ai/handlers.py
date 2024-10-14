@@ -384,6 +384,15 @@ class ModelProviderHandler(ProviderHandler):
         third_party_models = []
         if copilot_config and "thirdPartyModels" in copilot_config and copilot_config["thirdPartyModels"]:
             third_party_models = copilot_config["thirdPartyModels"]
+
+        # Fill in provider_id if it is missing.
+        for third_party_model in third_party_models:
+            print(third_party_model)
+            if len(third_party_model["provider_id"]) == 0:
+                if third_party_model["name"].startswith("anthropic"):
+                    third_party_model["provider_id"] = "bedrock-chat"
+                else:
+                    third_party_model["provider_id"] = "bedrock"
         f.close()
         return third_party_models
 
@@ -445,6 +454,11 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
         third_party_models = []
         if copilot_config and "thirdPartyModels" in copilot_config and copilot_config["thirdPartyModels"]:
             third_party_models = copilot_config["thirdPartyModels"]
+
+        # Fill in provider_id if it is missing.
+        for third_party_model in third_party_models:
+            if len(third_party_model["provider_id"]) == 0:
+                third_party_model["provider_id"] = "bedrock"
         f.close()
         return third_party_models
 
@@ -458,6 +472,7 @@ class EmbeddingsModelProviderHandler(ProviderHandler):
         for provider in self.em_providers.values():
             if "bedrock" not in provider.id and provider.id != "cloudera":
                 continue
+
 
             if "bedrock" in provider.id:
                 enabled_models = [model for model in provider.models if (provider.id + ":" + model) in configured_model_names]
