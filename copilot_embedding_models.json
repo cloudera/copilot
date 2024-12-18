@@ -1,0 +1,19 @@
+{
+  "copilot_models": [
+    {
+      "provider": "Amazon Bedrock",
+      "model": "amazon.titan-embed-text-v2:0",
+      "provider_id": "bedrock"
+    },
+    {
+      "provider": "Amazon Bedrock",
+      "model": "cohere.embed-english-v3",
+      "provider_id": "bedrock"
+    },
+    {
+      "provider": "Amazon Bedrock",
+      "model": "cohere.embed-multilingual-v3",
+      "provider_id": "bedrock"
+    }
+  ]
+}
