@@ -79,55 +79,95 @@ classes in their code.
 
 ## Installation
 
-### Installation via `pip`
+### Setup: creating a Jupyter AI environment (recommended)
 
-To install the JupyterLab extension, you can run:
+Before installing Jupyter AI, we highly recommend first creating a separate
+Conda environment for Jupyter AI. This prevents the installation process from
+clobbering Python packages in your existing Python environment.
+
+To do so, install
+[conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+and create an environment that uses Python 3.12 and the latest version of
+JupyterLab:
+
+    $ conda create -n jupyter-ai python=3.12 jupyterlab
+    $ conda activate jupyter-ai
+
+You can now choose how to install Jupyter AI.
+
+We offer 3 different ways to install Jupyter AI. You can read through each
+section to pick the installation method that works best for you.
+
+1. Quick installation via `pip` (recommended)
+2. Minimal installation via `pip`
+3. Minimal installation via `conda`
+
+### Quick installation via `pip` (recommended)
+
+If you want to install both the `%%ai` magic and the JupyterLab extension, you can run:
+
+    $ pip install jupyter-ai[all]
+
+Then, restart JupyterLab. This will install every optional dependency, which
+provides access to all models currently supported by `jupyter-ai`.
+
+If you are not using JupyterLab and you only want to install the Jupyter AI
+`%%ai` magic, you can run:
+
+    $ pip install jupyter-ai-magics[all]
+
+`jupyter-ai` depends on `jupyter-ai-magics`, so installing `jupyter-ai`
+automatically installs `jupyter-ai-magics`.
+
+### Minimal installation via `pip`
+
+Most model providers in Jupyter AI require a specific dependency to be installed
+before they are available for use. These are called _provider dependencies_.
+Provider dependencies are optional to Jupyter AI, meaning that Jupyter AI can be
+installed with or without any provider dependencies installed. If a provider
+requires a dependency that is not installed, its models are not listed in the
+user interface which allows you to select a language model.
+
+To perform a minimal installation via `pip` without any provider dependencies,
+omit the `[all]` optional dependency group from the package name:
 
 ```
 pip install jupyter-ai
 ```
 
-The latest major version of `jupyter-ai`, v2, only supports JupyterLab 4. If you
-need support for JupyterLab 3, you should install `jupyter-ai` v1 instead:
+By selectively installing provider dependencies, you can control which models
+are available in your Jupyter AI environment.
+
+For example, to install Jupyter AI with only added support for Anthropic models, run:
 
 ```
-pip install jupyter-ai~=1.0
+pip install jupyter-ai langchain-anthropic
 ```
 
-If you are not using JupyterLab and you only want to install the Jupyter AI `%%ai` magic, you can run:
+For more information on model providers and which dependencies they require, see
+[the model provider table](https://jupyter-ai.readthedocs.io/en/latest/users/index.html#model-providers).
 
-```
-$ pip install jupyter-ai-magics
-```
+### Minimal installation via `conda`
 
-`jupyter-ai` depends on `jupyter-ai-magics`, so installing `jupyter-ai`
-automatically installs `jupyter-ai-magics`.
+As an alternative to using `pip`, you can install `jupyter-ai` using
+[Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+from the `conda-forge` channel:
 
-### Installation via `pip` or `conda` in a Conda environment (recommended)
-
-We highly recommend installing both JupyterLab and Jupyter AI within an isolated
-Conda environment to avoid clobbering Python packages in your existing Python
-environment.
-
-First, install
-[conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
-and create an environment that uses Python 3.12:
-
-    $ conda create -n jupyter-ai python=3.12
-    $ conda activate jupyter-ai
-
-Then, use `conda` to install JupyterLab and Jupyter AI in this Conda environment.
-
-    $ conda install -c conda-forge jupyter-ai  # or,
     $ conda install conda-forge::jupyter-ai
 
-When starting JupyterLab with Jupyter AI, make sure to activate the Conda
-environment first:
+Most model providers in Jupyter AI require a specific _provider dependency_ to
+be installed before they are available for use. Provider dependencies are
+not installed when installing `jupyter-ai` from Conda Forge, and should be
+installed separately as needed.
+
+For example, to install Jupyter AI with only added support for OpenAI models, run:
 
 ```
-conda activate jupyter-ai
-jupyter lab
+conda install conda-forge::jupyter-ai conda-forge::langchain-openai
 ```
+
+For more information on model providers and which dependencies they require, see
+[the model provider table](https://jupyter-ai.readthedocs.io/en/latest/users/index.html#model-providers).
 
 ## Uninstallation
 
@@ -168,6 +208,7 @@ Jupyter AI supports the following model providers:
 | Hugging Face Hub             | `huggingface_hub`    | `HUGGINGFACEHUB_API_TOKEN` | `huggingface_hub`, `ipywidgets`, `pillow` |
 | MistralAI                    | `mistralai`          | `MISTRAL_API_KEY`          | `langchain-mistralai`                     |
 | NVIDIA                       | `nvidia-chat`        | `NVIDIA_API_KEY`           | `langchain_nvidia_ai_endpoints`           |
+| Ollama                       | `ollama`             | N/A                        | `langchain-ollama`                        |
 | OpenAI                       | `openai`             | `OPENAI_API_KEY`           | `langchain-openai`                        |
 | OpenAI (chat)                | `openai-chat`        | `OPENAI_API_KEY`           | `langchain-openai`                        |
 | SageMaker endpoint           | `sagemaker-endpoint` | N/A                        | `langchain-aws`                           |
@@ -245,10 +286,31 @@ Before you can use the chat interface, you need to provide your API keys for the
     alt="Screen shot of the setup interface, showing model selections and key populated"
     class="screenshot" />
 
-Once you have set all the necessary keys, click the "back" (left arrow) button in the upper-left corner of the Jupyter AI side panel. The chat interface now appears, and you can ask a question using the message box at the bottom.
+Once you have set all the necessary keys, click the "back" (left arrow) button in the upper-left corner of the Jupyter AI side panel. The chat interface now appears, with a help menu of available `/` (slash) commands, and you can ask a question using the message box at the bottom.
 
 <img src="../_static/chat-icon-left-tab-bar.png"
-    alt="Screen shot of the initial, blank, chat interface."
+    alt="Screen shot of the initial chat interface."
+    class="screenshot" />
+
+You may customize the template of the chat interface from the default one. The steps are as follows:
+1. Create a new `config.py` file in your current directory with the contents you want to see in the help message, by editing the template below:
+```
+c.AiExtension.help_message_template = """
+Sup. I'm {persona_name}. This is a sassy custom help message.
+
+Here's the slash commands you can use. Use 'em or don't... I don't care.
+
+{slash_commands_list}
+""".strip()
+```
+2.  Start JupyterLab with the following command:
+```
+jupyter lab --config=config.py
+```
+The new help message will be used instead of the default, as shown below
+
+<img src="../_static/chat-icon-left-tab-bar-custom.png"
+    alt="Screen shot of the custom chat interface."
     class="screenshot" />
 
 To compose a message, type it in the text box at the bottom of the chat interface and press <kbd>ENTER</kbd> to send it. You can press <kbd>SHIFT</kbd>+<kbd>ENTER</kbd> to add a new line. (These are the default keybindings; you can change them in the chat settings pane.) Once you have sent a message, you should see a response from Cloudera Copilot, the Jupyter AI chatbot.
@@ -272,29 +334,9 @@ The chat backend remembers the last two exchanges in your conversation and passe
 
 ### Amazon Bedrock Usage
 
-Jupyter AI enables use of language models hosted on [Amazon Bedrock](https://aws.amazon.com/bedrock/) on AWS. First, ensure that you have authentication to use AWS using the `boto3` SDK with credentials stored in the `default` profile. Guidance on how to do this can be found in the [`boto3` documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
+Jupyter AI enables use of language models hosted on [Amazon Bedrock](https://aws.amazon.com/bedrock/) on AWS. Ensure that you have authentication to use AWS using the `boto3` SDK with credentials stored in the `default` profile. Guidance on how to do this can be found in the [`boto3` documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
-For more detailed workflows, see [Using Amazon Bedrock with Jupter AI](bedrock.md).
-
-Bedrock supports many language model providers such as AI21 Labs, Amazon, Anthropic, Cohere, Meta, and Mistral AI. To use the base models from any supported provider make sure to enable them in Amazon Bedrock by using the AWS console. You should also select embedding models in Bedrock in addition to language completion models if you intend to use retrieval augmented generation (RAG) on your documents.
-
-You may now select a chosen Bedrock model from the drop-down menu box title `Completion model` in the chat interface. If RAG is going to be used then pick an embedding model that you chose from the Bedrock models as well. An example of these selections is shown below:
-
-<img src="../_static/bedrock-chat-basemodel.png"
-    width="50%"
-    alt='Screenshot of the Jupyter AI chat panel where the base language model and embedding model is selected.'
-    class="screenshot" />
-
-If your provider requires an API key, please enter it in the box that will show for that provider. Make sure to click on `Save Changes` to ensure that the inputs have been saved.
-
-Bedrock also allows custom models to be trained from scratch or fine-tuned from a base model. Jupyter AI enables a custom model to be called in the chat panel using its `arn` (Amazon Resource Name). The interface is shown below:
-
-<img src="../_static/bedrock-chat-custom-model-arn.png"
-    width="75%"
-    alt='Screenshot of the Jupyter AI chat panel where the custom model is selected using model arn.'
-    class="screenshot" />
-
-For detailed workflows, see [Using Amazon Bedrock with Jupter AI](bedrock.md).
+For details on enabling model access in your AWS account, using cross-region inference, or invoking custom/provisioned models, please see our dedicated documentation page on [using Amazon Bedrock in Jupyter AI](bedrock.md).
 
 
 ### SageMaker endpoints usage
@@ -472,6 +514,13 @@ To teach Jupyter AI about a folder full of documentation, for example, run `/lea
     alt='Screen shot of "/learn docs/" command and a response.'
     class="screenshot" />
 
+The `/learn` command also supports unix shell-style wildcard matching. This allows fine-grained file selection for learning. For example, to learn on only notebooks in all directories you can use `/learn **/*.ipynb` and all notebooks within your base (or preferred directory if set) will be indexed, while all other file extensions will be ignored.
+
+:::{warning}
+:name: unix shell-style wildcard matching
+Certain patterns may cause `/learn` to run more slowly. For instance `/learn **` may cause directories to be walked multiple times in search of files.
+:::
+
 You can then use `/ask` to ask a question specifically about the data that you taught Jupyter AI with `/learn`.
 
 <img src="../_static/chat-ask-command.png"
@@ -575,7 +624,7 @@ contents of the failing cell.
 
 ### Additional chat commands
 
-To clear the chat panel, use the `/clear` command. This does not reset the AI model; the model may still remember previous messages that you sent it, and it may use them to inform its responses.
+To start a new conversation, use the `/clear` command. This will clear the chat panel and reset the model's memory.
 
 ## The `%ai` and `%%ai` magic commands
 
@@ -647,6 +696,29 @@ We currently support the following language model providers:
 - `openai`
 - `openai-chat`
 - `sagemaker-endpoint`
+
+### Configuring a default model
+
+To configure a default model you can use the IPython `%config` magic:
+
+```python
+%config AiMagics.default_language_model = "anthropic:claude-v1.2"
+```
+
+Then subsequent magics can be invoked without typing in the model:
+
+```
+%%ai
+Write a poem about C++.
+```
+
+You can configure the default model for all notebooks by specifying `c.AiMagics.default_language_model` tratilet in `ipython_config.py`, for example:
+
+```python
+c.AiMagics.default_language_model = "anthropic:claude-v1.2"
+```
+
+The location of `ipython_config.py` file is documented in [IPython configuration reference](https://ipython.readthedocs.io/en/stable/config/intro.html).
 
 ### Listing available models
 
@@ -726,6 +798,34 @@ include calls to nonexistent (hallucinated) APIs.
 %%ai chatgpt -f code
 A function that computes the lowest common multiples of two integers, and
 a function that runs 5 test cases of the lowest common multiple function
+```
+
+### Configuring the amount of history to include in the context
+
+By default, two previous Human/AI message exchanges are included in the context of the new prompt.
+You can change this using the IPython `%config` magic, for example:
+
+```python
+%config AiMagics.max_history = 4
+```
+
+Note that old messages are still kept locally in memory,
+so they will be included in the context of the next prompt after raising the `max_history` value.
+
+You can configure the value for all notebooks
+by specifying `c.AiMagics.max_history` traitlet in `ipython_config.py`, for example:
+
+```python
+c.AiMagics.max_history = 4
+```
+
+### Clearing the chat history
+
+You can run the `%ai reset` line magic command to clear the chat history. After you do this,
+previous magic commands you've run will no longer be added as context in requests.
+
+```
+%ai reset
 ```
 
 ### Interpolating in prompts
@@ -956,6 +1056,21 @@ configuration.
 
 ```
 jupyter lab --AiExtension.allowed_providers=openai --AiExtension.allowed_providers=ai21
+```
+
+### Chat memory size
+
+This configuration allows for setting the number of chat exchanges the model
+uses as context when generating a response.
+
+One chat exchange corresponds to a user query message and its AI response, which counts as two messages.
+k denotes one chat exchange, i.e., two messages.
+The default value of k is 2, which corresponds to 4 messages.
+
+For example, if we want the default memory to be 4 exchanges, then use the following command line invocation when starting Jupyter Lab:
+
+```
+jupyter lab --AiExtension.default_max_chat_history=4
 ```
 
 ### Model parameters

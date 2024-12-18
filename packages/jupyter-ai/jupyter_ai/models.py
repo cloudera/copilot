@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from jupyter_ai_magics import Persona
@@ -39,6 +40,27 @@ class ChatRequest(BaseModel):
     selection: Optional[Selection]
 
 
+class StopRequest(BaseModel):
+    """
+    A request from a user to stop streaming all messages that are replying to
+    messages previously sent by that user. This request does not stop all
+    streaming responses for all users, but only the user that issued the
+    request. User identity is determined by the `username` from the
+    `IdentityProvider` instance available to each WebSocket handler.
+    """
+
+    type: Literal["stop"]
+
+
+class ClearRequest(BaseModel):
+    type: Literal["clear"] = "clear"
+    target: Optional[str]
+    """
+    Message ID of the HumanChatMessage to delete an exchange at.
+    If not provided, this requests the backend to clear all messages.
+    """
+
+
 class ChatUser(BaseModel):
     # User ID assigned by IdentityProvider.
     username: str
@@ -56,8 +78,7 @@ class ChatClient(ChatUser):
     id: str
 
 
-class AgentChatMessage(BaseModel):
-    type: Literal["agent"] = "agent"
+class BaseAgentMessage(BaseModel):
     id: str
     time: float
     body: str
@@ -74,8 +95,20 @@ class AgentChatMessage(BaseModel):
     this defaults to a description of `ClouderaCopilotPersona`.
     """
 
+    metadata: Dict[str, Any] = {}
+    """
+    Message metadata set by a provider after fully processing an input. The
+    contents of this dictionary are provider-dependent, and can be any
+    dictionary with string keys. This field is not to be displayed directly to
+    the user, and is intended solely for developer purposes.
+    """
 
-class AgentStreamMessage(AgentChatMessage):
+
+class AgentChatMessage(BaseAgentMessage):
+    type: Literal["agent"] = "agent"
+
+
+class AgentStreamMessage(BaseAgentMessage):
     type: Literal["agent-stream"] = "agent-stream"
     complete: bool
     # other attrs inherited from `AgentChatMessage`
@@ -84,9 +117,26 @@ class AgentStreamMessage(AgentChatMessage):
 class AgentStreamChunkMessage(BaseModel):
     type: Literal["agent-stream-chunk"] = "agent-stream-chunk"
     id: str
+    """ID of the parent `AgentStreamMessage`."""
     content: str
+    """The string to append to the `AgentStreamMessage` referenced by `id`."""
     stream_complete: bool
-    """Indicates whether this chunk message completes the referenced stream."""
+    """Indicates whether this chunk completes the stream referenced by `id`."""
+    metadata: Dict[str, Any] = {}
+    """
+    The metadata of the stream referenced by `id`. Metadata from the latest
+    chunk should override any metadata from previous chunks. See the docstring
+    on `BaseAgentMessage.metadata` for information.
+    """
+
+    @validator("metadata")
+    def validate_metadata(cls, v):
+        """Ensure metadata values are JSON serializable"""
+        try:
+            json.dumps(v)
+            return v
+        except TypeError as e:
+            raise ValueError(f"Metadata must be JSON serializable: {str(e)}")
 
 
 class HumanChatMessage(BaseModel):
@@ -105,6 +155,11 @@ class HumanChatMessage(BaseModel):
 
 class ClearMessage(BaseModel):
     type: Literal["clear"] = "clear"
+    targets: Optional[List[str]] = None
+    """
+    Message IDs of the HumanChatMessage to delete an exchange at.
+    If not provided, this instructs the frontend to clear all messages.
+    """
 
 
 class PendingMessage(BaseModel):
@@ -112,21 +167,20 @@ class PendingMessage(BaseModel):
     id: str
     time: float
     body: str
+    reply_to: str
     persona: Persona
     ellipsis: bool = True
     closed: bool = False
 
 
 class ClosePendingMessage(BaseModel):
-    type: Literal["pending"] = "close-pending"
+    type: Literal["close-pending"] = "close-pending"
     id: str
 
 
 # the type of messages being broadcast to clients
 ChatMessage = Union[
-    AgentChatMessage,
-    HumanChatMessage,
-    AgentStreamMessage,
+    AgentChatMessage, HumanChatMessage, AgentStreamMessage, AgentStreamChunkMessage
 ]
 
 
@@ -144,8 +198,7 @@ class ConnectionMessage(BaseModel):
 
 
 Message = Union[
-    AgentChatMessage,
-    HumanChatMessage,
+    ChatMessage,
     ConnectionMessage,
     ClearMessage,
     PendingMessage,
@@ -243,3 +296,21 @@ class ListSlashCommandsEntry(BaseModel):
 
 class ListSlashCommandsResponse(BaseModel):
     slash_commands: List[ListSlashCommandsEntry] = []
+
+
+class ListOptionsEntry(BaseModel):
+    id: str
+    """ID of the autocomplete option.
+    Includes the command prefix. E.g. "/clear", "@file"."""
+    label: str
+    """Text that will be inserted into the prompt when the option is selected.
+    Includes a space at the end if the option is complete.
+    Partial suggestions do not include the space and may trigger future suggestions."""
+    description: str
+    """Text next to the option in the autocomplete list."""
+    only_start: bool
+    """Whether to command can only be inserted at the start of the prompt."""
+
+
+class ListOptionsResponse(BaseModel):
+    options: List[ListOptionsEntry] = []

@@ -83,6 +83,15 @@ export namespace AiService {
     selection?: Selection;
   };
 
+  export type ClearRequest = {
+    type: 'clear';
+    target?: string;
+  };
+
+  export type StopRequest = {
+    type: 'stop';
+  };
+
   export type Collaborator = {
     username: string;
     initials: string;
@@ -108,6 +117,7 @@ export namespace AiService {
     body: string;
     reply_to: string;
     persona: Persona;
+    metadata: Record<string, any>;
   };
 
   export type HumanChatMessage = {
@@ -138,6 +148,7 @@ export namespace AiService {
 
   export type ClearMessage = {
     type: 'clear';
+    targets?: string[];
   };
 
   export type PendingMessage = {
@@ -145,6 +156,7 @@ export namespace AiService {
     id: string;
     time: number;
     body: string;
+    reply_to: string;
     persona: Persona;
     ellipsis: boolean;
   };
@@ -164,7 +176,10 @@ export namespace AiService {
     id: string;
     content: string;
     stream_complete: boolean;
+    metadata: Record<string, any>;
   };
+
+  export type Request = ChatRequest | ClearRequest | StopRequest;
 
   export type ChatMessage =
     | AgentChatMessage
@@ -318,5 +333,31 @@ export namespace AiService {
 
   export async function listSlashCommands(): Promise<ListSlashCommandsResponse> {
     return requestAPI<ListSlashCommandsResponse>('chats/slash_commands');
+  }
+
+  export type AutocompleteOption = {
+    id: string;
+    description: string;
+    label: string;
+    only_start: boolean;
+  };
+
+  export type ListAutocompleteOptionsResponse = {
+    options: AutocompleteOption[];
+  };
+
+  export async function listAutocompleteOptions(): Promise<ListAutocompleteOptionsResponse> {
+    return requestAPI<ListAutocompleteOptionsResponse>(
+      'chats/autocomplete_options'
+    );
+  }
+
+  export async function listAutocompleteArgOptions(
+    partialCommand: string
+  ): Promise<ListAutocompleteOptionsResponse> {
+    return requestAPI<ListAutocompleteOptionsResponse>(
+      'chats/autocomplete_options?partialCommand=' +
+        encodeURIComponent(partialCommand)
+    );
   }
 }

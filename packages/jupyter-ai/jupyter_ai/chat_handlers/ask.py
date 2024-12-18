@@ -72,7 +72,8 @@ class AskChatHandler(BaseChatHandler):
         self.get_llm_chain()
 
         try:
-            with self.pending("Searching learned documents"):
+            with self.pending("Searching learned documents", message):
+                assert self.llm_chain
                 ut = UsageTracker()
                 ut._SendCopilotEvent({
                     "event_details": "/ask",
@@ -83,7 +84,11 @@ class AskChatHandler(BaseChatHandler):
                     "model_provider_id": self.config_manager.lm_provider.id,
                     "prompt_word_count": len(args.query),
                 })
-                result = await self.llm_chain.acall({"question": query})
+                # TODO: migrate this class to use a LCEL `Runnable` instead of
+                # `Chain`, then remove the below ignore comment.
+                result = await self.llm_chain.acall(  # type:ignore[attr-defined]
+                    {"question": query}
+                )
                 response = result["answer"]
             self.reply(response, message)
         except AssertionError as e:

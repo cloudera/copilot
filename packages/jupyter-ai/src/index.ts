@@ -18,10 +18,16 @@ import { ChatHandler } from './chat_handler';
 import { buildErrorWidget } from './widgets/chat-error';
 import { completionPlugin } from './completions';
 import { statusItemPlugin } from './status';
-import { IJaiCompletionProvider, IJaiMessageFooter } from './tokens';
+import {
+  IJaiCompletionProvider,
+  IJaiCore,
+  IJaiMessageFooter,
+  IJaiTelemetryHandler
+} from './tokens';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ActiveCellManager } from './contexts/active-cell-context';
 import { Signal } from '@lumino/signaling';
+import { menuPlugin } from './plugins/menu-plugin';
 
 export type DocumentTracker = IWidgetTracker<IDocumentWidget>;
 
@@ -35,17 +41,19 @@ export namespace CommandIDs {
 /**
  * Initialization data for the jupyter_ai extension.
  */
-const plugin: JupyterFrontEndPlugin<void> = {
+const plugin: JupyterFrontEndPlugin<IJaiCore> = {
   id: '@jupyter-ai/core:plugin',
   autoStart: true,
+  requires: [IRenderMimeRegistry],
   optional: [
     IGlobalAwareness,
     ILayoutRestorer,
     IThemeManager,
     IJaiCompletionProvider,
-    IJaiMessageFooter
+    IJaiMessageFooter,
+    IJaiTelemetryHandler
   ],
-  requires: [IRenderMimeRegistry],
+  provides: IJaiCore,
   activate: async (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
@@ -53,7 +61,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null,
     completionProvider: IJaiCompletionProvider | null,
-    messageFooter: IJaiMessageFooter | null
+    messageFooter: IJaiMessageFooter | null,
+    telemetryHandler: IJaiTelemetryHandler | null
   ) => {
     /**
      * Initialize selection watcher singleton
@@ -91,7 +100,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         openInlineCompleterSettings,
         activeCellManager,
         focusInputSignal,
-        messageFooter
+        messageFooter,
+        telemetryHandler,
+        app.serviceManager.user
       );
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);
@@ -114,7 +125,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
       },
       label: 'Focus the jupyter-ai chat'
     });
+
+    return {
+      activeCellManager,
+      chatHandler,
+      chatWidget,
+      selectionWatcher
+    };
   }
 };
 
-export default [plugin, statusItemPlugin, completionPlugin];
+export default [plugin, statusItemPlugin, completionPlugin, menuPlugin];
+
+export * from './contexts';
+export * from './tokens';

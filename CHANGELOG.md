@@ -2,6 +2,309 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 2.28.3
+
+This release notably fixes a major bug with updated model fields not being used until after a server restart, and fixes a bug with Ollama in the chat. Thank you for your patience as we continue to improve Jupyter AI! 🤗
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.28.2...37558cd9233c1971b8793138bd334bc648a69125))
+
+### Enhancements made
+
+- Removes outdated OpenAI models and adds new ones [#1127](https://github.com/jupyterlab/jupyter-ai/pull/1127) ([@srdas](https://github.com/srdas))
+
+### Bugs fixed
+
+- Fix install step in CI [#1139](https://github.com/jupyterlab/jupyter-ai/pull/1139) ([@dlqqq](https://github.com/dlqqq))
+- Update completion model fields immediately on save [#1137](https://github.com/jupyterlab/jupyter-ai/pull/1137) ([@dlqqq](https://github.com/dlqqq))
+- Fix JSON serialization error in Ollama models [#1129](https://github.com/jupyterlab/jupyter-ai/pull/1129) ([@JanusChoi](https://github.com/JanusChoi))
+- Update model fields immediately on save [#1125](https://github.com/jupyterlab/jupyter-ai/pull/1125) ([@dlqqq](https://github.com/dlqqq))
+- Downgrade spurious 'error' logs [#1119](https://github.com/jupyterlab/jupyter-ai/pull/1119) ([@ctcjab](https://github.com/ctcjab))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-11-18&to=2024-12-05&type=c))
+
+[@ctcjab](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Actcjab+updated%3A2024-11-18..2024-12-05&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-11-18..2024-12-05&type=Issues) | [@JanusChoi](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJanusChoi+updated%3A2024-11-18..2024-12-05&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-11-18..2024-12-05&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-11-18..2024-12-05&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-11-18..2024-12-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 2.28.2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.28.1...cbfed31bc3ee19c02a12c28a618af99ab10206be))
+
+### Bugs fixed
+
+- Bump LangChain minimum versions [#1109](https://github.com/jupyterlab/jupyter-ai/pull/1109) ([@dlqqq](https://github.com/dlqqq))
+- Catch error on non plaintext files in `@file` and reply gracefully in chat [#1106](https://github.com/jupyterlab/jupyter-ai/pull/1106) ([@srdas](https://github.com/srdas))
+- Fix rendering of code blocks in JupyterLab 4.3.0+ [#1104](https://github.com/jupyterlab/jupyter-ai/pull/1104) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-11-11&to=2024-11-18&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-11-11..2024-11-18&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-11-11..2024-11-18&type=Issues)
+
+## 2.28.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.28.0...d5d604d64552ed89ba200d56da9d3044138feaf5))
+
+### Bugs fixed
+
+- Update `faiss-cpu` version range [#1097](https://github.com/jupyterlab/jupyter-ai/pull/1097) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-11-07&to=2024-11-11&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-11-07..2024-11-11&type=Issues)
+
+## 2.28.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.27.0...6eb6a625712b8a77240ddfffe70050ed9ab83576))
+
+### Release summary
+
+This release notably includes the following changes:
+
+- Models from the `Anthropic` and `ChatAnthropic` providers are now merged in the config UI, so all Anthropic models are shown in the same place in the "Language model" dropdown.
+
+- Anthropic Claude v1 LLMs have been removed, as the models are retired and no longer available from the API.
+
+- The chat system prompt has been updated to encourage the LLM to express dollar quantities in LaTeX, i.e. the LLM should prefer returning `\(\$100\)` instead of `$100`. For the latest LLMs, this generally fixes a [rendering issue](https://github.com/jupyterlab/jupyter-ai/issues/1067) when multiple dollar quantities are given literally in the same sentence.
+
+  - Note that the issue may still persist in older LLMs, which do not respect the system prompt as frequently.
+
+- `/export` has been fixed to include streamed replies, which were previously omitted.
+
+- Calling non-chat providers with history has been fixed to behave properly in magics.
+
+### Enhancements made
+
+- Remove retired models and add new `Haiku-3.5` model in Anthropic [#1092](https://github.com/jupyterlab/jupyter-ai/pull/1092) ([@srdas](https://github.com/srdas))
+- Reduced padding in cell around code icons in code toolbar [#1072](https://github.com/jupyterlab/jupyter-ai/pull/1072) ([@srdas](https://github.com/srdas))
+- Merge Anthropic language model providers [#1069](https://github.com/jupyterlab/jupyter-ai/pull/1069) ([@srdas](https://github.com/srdas))
+- Add examples of using Fields and EnvAuthStrategy to developer documentation [#1056](https://github.com/jupyterlab/jupyter-ai/pull/1056) ([@alanmeeson](https://github.com/alanmeeson))
+
+### Bugs fixed
+
+- Continue to allow `$` symbols to delimit inline math in human messages [#1094](https://github.com/jupyterlab/jupyter-ai/pull/1094) ([@dlqqq](https://github.com/dlqqq))
+- Fix `/export` by including streamed agent messages [#1077](https://github.com/jupyterlab/jupyter-ai/pull/1077) ([@mcavdar](https://github.com/mcavdar))
+- Fix magic commands when using non-chat providers w/ history [#1075](https://github.com/jupyterlab/jupyter-ai/pull/1075) ([@alanmeeson](https://github.com/alanmeeson))
+- Allow `$` to literally denote quantities of USD in chat [#1068](https://github.com/jupyterlab/jupyter-ai/pull/1068) ([@dlqqq](https://github.com/dlqqq))
+
+### Documentation improvements
+
+- Improve installation documentation and clarify provider dependencies [#1087](https://github.com/jupyterlab/jupyter-ai/pull/1087) ([@srdas](https://github.com/srdas))
+- Added Ollama to the providers table in user docs [#1064](https://github.com/jupyterlab/jupyter-ai/pull/1064) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-10-29&to=2024-11-07&type=c))
+
+[@alanmeeson](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aalanmeeson+updated%3A2024-10-29..2024-11-07&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-10-29..2024-11-07&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-10-29..2024-11-07&type=Issues) | [@mcavdar](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amcavdar+updated%3A2024-10-29..2024-11-07&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-10-29..2024-11-07&type=Issues)
+
+## 2.27.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.26.0...b621aa476afc3af9e9b3dd398108b7ed9aaf7bf6))
+
+### Enhancements made
+
+- Added new Anthropic Sonnet3.5 v2 models [#1049](https://github.com/jupyterlab/jupyter-ai/pull/1049) ([@srdas](https://github.com/srdas))
+- Implement streaming for `/fix` [#1048](https://github.com/jupyterlab/jupyter-ai/pull/1048) ([@srdas](https://github.com/srdas))
+
+### Documentation improvements
+
+- Added Developer documentation for streaming responses [#1051](https://github.com/jupyterlab/jupyter-ai/pull/1051) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-10-21&to=2024-10-29&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-10-21..2024-10-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-10-21..2024-10-29&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-10-21..2024-10-29&type=Issues)
+
+## 2.26.0
+
+This release notably includes the addition of a "Stop streaming" button, which takes over the "Send" button when a reply is streaming and the chat input is empty. While Jupyternaut is streaming a reply to a user, the user has the option to click the "Stop streaming" button to interrupt Jupyternaut and stop it from streaming further. Thank you @krassowski for contributing this feature! 🎉
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.25.0...838dfa9cdcbd8fc0373e3c056c677b016531a68c))
+
+### Enhancements made
+
+- Support Quarto Markdown in `/learn` [#1047](https://github.com/jupyterlab/jupyter-ai/pull/1047) ([@dlqqq](https://github.com/dlqqq))
+- Update requirements contributors doc [#1045](https://github.com/jupyterlab/jupyter-ai/pull/1045) ([@JasonWeill](https://github.com/JasonWeill))
+- Remove clear_message_ids from RootChatHandler [#1042](https://github.com/jupyterlab/jupyter-ai/pull/1042) ([@michaelchia](https://github.com/michaelchia))
+- Migrate streaming logic to `BaseChatHandler`  [#1039](https://github.com/jupyterlab/jupyter-ai/pull/1039) ([@dlqqq](https://github.com/dlqqq))
+- Unify message clearing & broadcast logic [#1038](https://github.com/jupyterlab/jupyter-ai/pull/1038) ([@dlqqq](https://github.com/dlqqq))
+- Learn from JSON files [#1024](https://github.com/jupyterlab/jupyter-ai/pull/1024) ([@jlsajfj](https://github.com/jlsajfj))
+- Allow users to stop message streaming [#1022](https://github.com/jupyterlab/jupyter-ai/pull/1022) ([@krassowski](https://github.com/krassowski))
+
+### Bugs fixed
+
+- Always use `username` from `IdentityProvider` [#1034](https://github.com/jupyterlab/jupyter-ai/pull/1034) ([@krassowski](https://github.com/krassowski))
+
+### Maintenance and upkeep improvements
+
+- Support `jupyter-collaboration` v3 [#1035](https://github.com/jupyterlab/jupyter-ai/pull/1035) ([@krassowski](https://github.com/krassowski))
+- Test Python 3.9 and 3.12 on CI, test minimum dependencies [#1029](https://github.com/jupyterlab/jupyter-ai/pull/1029) ([@krassowski](https://github.com/krassowski))
+
+### Documentation improvements
+
+- Update requirements contributors doc [#1045](https://github.com/jupyterlab/jupyter-ai/pull/1045) ([@JasonWeill](https://github.com/JasonWeill))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-10-07&to=2024-10-21&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-10-07..2024-10-21&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-10-07..2024-10-21&type=Issues) | [@jlsajfj](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajlsajfj+updated%3A2024-10-07..2024-10-21&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-10-07..2024-10-21&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-10-07..2024-10-21&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-10-07..2024-10-21&type=Issues)
+
+## 2.25.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.24.1...097dbe48722e255173c6504e6de835c297c553ab))
+
+### Enhancements made
+
+- Export context hooks from NPM package entry point [#1020](https://github.com/jupyterlab/jupyter-ai/pull/1020) ([@dlqqq](https://github.com/dlqqq))
+- Add support for optional telemetry plugin [#1018](https://github.com/jupyterlab/jupyter-ai/pull/1018) ([@dlqqq](https://github.com/dlqqq))
+- Add back history and reset subcommand in magics [#997](https://github.com/jupyterlab/jupyter-ai/pull/997) ([@akaihola](https://github.com/akaihola))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-10-04&to=2024-10-07&type=c))
+
+[@akaihola](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aakaihola+updated%3A2024-10-04..2024-10-07&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-10-04..2024-10-07&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajtpio+updated%3A2024-10-04..2024-10-07&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-10-04..2024-10-07&type=Issues)
+
+## 2.24.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.24.0...f3692d94dfbb4837714888d0e69f6c7ca3ba547c))
+
+### Enhancements made
+
+- Make path argument required on /learn [#1012](https://github.com/jupyterlab/jupyter-ai/pull/1012) ([@andrewfulton9](https://github.com/andrewfulton9))
+
+### Bugs fixed
+
+- Export tokens from `lib/index.js` [#1019](https://github.com/jupyterlab/jupyter-ai/pull/1019) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-09-26&to=2024-10-04&type=c))
+
+[@andrewfulton9](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrewfulton9+updated%3A2024-09-26..2024-10-04&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-09-26..2024-10-04&type=Issues) | [@hockeymomonow](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ahockeymomonow+updated%3A2024-09-26..2024-10-04&type=Issues)
+
+## 2.24.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.23.0...e6ec9e9ba4336168ce7874c09d07157be8bbff5a))
+
+This release notably introduces a new **context command** `@file:<file-path>` to the chat UI, which includes the content of the target file with your prompt when sent. This allows you to ask questions like:
+
+- `What does @file:src/components/ActionButton.tsx do?`
+- `Can you refactor @file:src/index.ts to use async/await syntax?`
+- `How do I add an optional dependency to @file:pyproject.toml?`
+
+The context command feature also includes an autocomplete menu UI to help navigate your filesystem with fewer keystrokes.
+
+Thank you @michaelchia for developing this feature!
+
+### Enhancements made
+
+- Migrate to `ChatOllama` base class in Ollama provider [#1015](https://github.com/jupyterlab/jupyter-ai/pull/1015) ([@srdas](https://github.com/srdas))
+- Add `metadata` field to agent messages [#1013](https://github.com/jupyterlab/jupyter-ai/pull/1013) ([@dlqqq](https://github.com/dlqqq))
+- Add OpenRouter support [#996](https://github.com/jupyterlab/jupyter-ai/pull/996) ([@akaihola](https://github.com/akaihola))
+- Framework for adding context to LLM prompt [#993](https://github.com/jupyterlab/jupyter-ai/pull/993) ([@michaelchia](https://github.com/michaelchia))
+- Adds unix shell-style wildcard matching to `/learn` [#989](https://github.com/jupyterlab/jupyter-ai/pull/989) ([@andrewfulton9](https://github.com/andrewfulton9))
+
+### Bugs fixed
+
+- Run mypy on CI, fix or ignore typing issues [#987](https://github.com/jupyterlab/jupyter-ai/pull/987) ([@krassowski](https://github.com/krassowski))
+
+### Maintenance and upkeep improvements
+
+- Upgrade to `actions/upload-artifact@v4` in workflows [#992](https://github.com/jupyterlab/jupyter-ai/pull/992) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-09-11&to=2024-09-26&type=c))
+
+[@akaihola](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aakaihola+updated%3A2024-09-11..2024-09-26&type=Issues) | [@andrewfulton9](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrewfulton9+updated%3A2024-09-11..2024-09-26&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-09-11..2024-09-26&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aellisonbg+updated%3A2024-09-11..2024-09-26&type=Issues) | [@hockeymomonow](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ahockeymomonow+updated%3A2024-09-11..2024-09-26&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-09-11..2024-09-26&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-09-11..2024-09-26&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-09-11..2024-09-26&type=Issues)
+
+## 2.23.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.22.0...83cbd8ea240f1429766c417bada3bfb39afc4462))
+
+### Enhancements made
+
+- Allow unlimited LLM memory through traitlets configuration [#986](https://github.com/jupyterlab/jupyter-ai/pull/986) ([@krassowski](https://github.com/krassowski))
+- Allow to disable automatic inline completions [#981](https://github.com/jupyterlab/jupyter-ai/pull/981) ([@krassowski](https://github.com/krassowski))
+- Add ability to delete messages + start new chat session [#951](https://github.com/jupyterlab/jupyter-ai/pull/951) ([@michaelchia](https://github.com/michaelchia))
+
+### Bugs fixed
+
+- Fix `RunnableWithMessageHistory` import [#980](https://github.com/jupyterlab/jupyter-ai/pull/980) ([@krassowski](https://github.com/krassowski))
+- Fix sort messages [#975](https://github.com/jupyterlab/jupyter-ai/pull/975) ([@michaelchia](https://github.com/michaelchia))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-08-29&to=2024-09-11&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-08-29..2024-09-11&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-08-29..2024-09-11&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-08-29..2024-09-11&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-08-29..2024-09-11&type=Issues)
+
+## 2.22.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.21.0...79158abf7044605c5776e205dd171fe87fb64142))
+
+### Enhancements made
+
+- Add 'Generative AI' submenu [#971](https://github.com/jupyterlab/jupyter-ai/pull/971) ([@dlqqq](https://github.com/dlqqq))
+- Add Gemini 1.5 to the list of chat options [#964](https://github.com/jupyterlab/jupyter-ai/pull/964) ([@trducng](https://github.com/trducng))
+- Allow configuring a default model for cell magics (and line error magic) [#962](https://github.com/jupyterlab/jupyter-ai/pull/962) ([@krassowski](https://github.com/krassowski))
+- Make chat memory size traitlet configurable + /clear to reset memory [#943](https://github.com/jupyterlab/jupyter-ai/pull/943) ([@michaelchia](https://github.com/michaelchia))
+
+### Maintenance and upkeep improvements
+
+### Documentation improvements
+
+- Update documentation to cover installation of all dependencies [#961](https://github.com/jupyterlab/jupyter-ai/pull/961) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-08-19&to=2024-08-29&type=c))
+
+[@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-08-19..2024-08-29&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-08-19..2024-08-29&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-08-19..2024-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-08-19..2024-08-29&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-08-19..2024-08-29&type=Issues) | [@trducng](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Atrducng+updated%3A2024-08-19..2024-08-29&type=Issues)
+
+## 2.21.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.20.0...83e368b9d04904f9eb0ad4b1f0759bf3b7bbc93d))
+
+### Enhancements made
+
+- Add optional configurable message footer [#942](https://github.com/jupyterlab/jupyter-ai/pull/942) ([@dlqqq](https://github.com/dlqqq))
+- Add support for Azure Open AI Embeddings to Jupyter AI [#940](https://github.com/jupyterlab/jupyter-ai/pull/940) ([@gsrikant7](https://github.com/gsrikant7))
+- Make help message template configurable [#938](https://github.com/jupyterlab/jupyter-ai/pull/938) ([@dlqqq](https://github.com/dlqqq))
+- Add latest Bedrock models (Titan, Llama 3.1 405b, Mistral Large 2, Jamba Instruct) [#923](https://github.com/jupyterlab/jupyter-ai/pull/923) ([@gabrielkoo](https://github.com/gabrielkoo))
+- Add support for custom/provisioned models in Bedrock [#922](https://github.com/jupyterlab/jupyter-ai/pull/922) ([@dlqqq](https://github.com/dlqqq))
+- Settings section improvement [#918](https://github.com/jupyterlab/jupyter-ai/pull/918) ([@andrewfulton9](https://github.com/andrewfulton9))
+
+### Bugs fixed
+
+- Bind reject method to promise, improve typing [#949](https://github.com/jupyterlab/jupyter-ai/pull/949) ([@krassowski](https://github.com/krassowski))
+- Fix sending empty input with Enter [#946](https://github.com/jupyterlab/jupyter-ai/pull/946) ([@michaelchia](https://github.com/michaelchia))
+- Fix saving chat settings [#935](https://github.com/jupyterlab/jupyter-ai/pull/935) ([@dlqqq](https://github.com/dlqqq))
+
+### Documentation improvements
+
+- Add documentation on how to use Amazon Bedrock  [#936](https://github.com/jupyterlab/jupyter-ai/pull/936) ([@srdas](https://github.com/srdas))
+- Update copyright template [#925](https://github.com/jupyterlab/jupyter-ai/pull/925) ([@srdas](https://github.com/srdas))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-07-29&to=2024-08-19&type=c))
+
+[@andrewfulton9](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrewfulton9+updated%3A2024-07-29..2024-08-19&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-07-29..2024-08-19&type=Issues) | [@gabrielkoo](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Agabrielkoo+updated%3A2024-07-29..2024-08-19&type=Issues) | [@gsrikant7](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Agsrikant7+updated%3A2024-07-29..2024-08-19&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-07-29..2024-08-19&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-07-29..2024-08-19&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-07-29..2024-08-19&type=Issues)
+
 ## 2.20.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-ai/compare/@jupyter-ai/core@2.19.1...79d66daefa2dc2f8a47b55712d7b812ee23acda4))
@@ -18,8 +321,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-07-22&to=2024-07-29&type=c))
 
 [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-07-22..2024-07-29&type=Issues) | [@JasonWeill](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3AJasonWeill+updated%3A2024-07-22..2024-07-29&type=Issues) | [@srdas](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Asrdas+updated%3A2024-07-22..2024-07-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 2.19.1
 
@@ -47,8 +348,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-ai/graphs/contributors?from=2024-07-15&to=2024-07-22&type=c))
 
 [@andrewfulton9](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Aandrewfulton9+updated%3A2024-07-15..2024-07-22&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Adlqqq+updated%3A2024-07-15..2024-07-22&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Ajtpio+updated%3A2024-07-15..2024-07-22&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Akrassowski+updated%3A2024-07-15..2024-07-22&type=Issues) | [@michaelchia](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Amichaelchia+updated%3A2024-07-15..2024-07-22&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-ai+involves%3Apre-commit-ci+updated%3A2024-07-15..2024-07-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 2.19.0
 

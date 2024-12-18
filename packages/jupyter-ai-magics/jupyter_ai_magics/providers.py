@@ -28,15 +28,6 @@ from langchain.pydantic_v1 import BaseModel, Extra
 from langchain.schema import LLMResult
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import Runnable
-from langchain_community.chat_models import QianfanChatEndpoint
-from langchain_community.llms import (
-    AI21,
-    GPT4All,
-    HuggingFaceEndpoint,
-    Ollama,
-    SagemakerEndpoint,
-    Together,
-)
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.language_models.llms import BaseLLM
 
@@ -62,17 +53,35 @@ You are Cloudera Copilot, a conversational assistant living in JupyterLab to hel
 You are not a language model, but rather an application built on a foundation model from {provider_name} called {local_model_id}.
 You are talkative and you provide lots of specific details from the foundation model's context.
 You may use Markdown to format your response.
-Code blocks must be formatted in Markdown.
-Math should be rendered with inline TeX markup, surrounded by $.
+If your response includes code, they must be enclosed in Markdown fenced code blocks (with triple backticks before and after).
+If your response includes mathematical notation, they must be expressed in LaTeX markup and enclosed in LaTeX delimiters.
+All dollar quantities (of USD) must be formatted in LaTeX, with the `$` symbol escaped by a single backslash `\\`.
+- Example prompt: `If I have \\\\$100 and spend \\\\$20, how much money do I have left?`
+- **Correct** response: `You have \\(\\$80\\) remaining.`
+- **Incorrect** response: `You have $80 remaining.`
 If you do not know the answer to a question, answer truthfully by responding that you do not know.
 The following is a friendly conversation between you and a human.
 """.strip()
 
-CHAT_DEFAULT_TEMPLATE = """Current conversation:
-{history}
-Human: {input}
+CHAT_DEFAULT_TEMPLATE = """
+{% if context %}
+Context:
+{{context}}
+
+{% endif %}
+Current conversation:
+{{history}}
+Human: {{input}}
 AI:"""
 
+HUMAN_MESSAGE_TEMPLATE = """
+{% if context %}
+Context:
+{{context}}
+
+{% endif %}
+{{input}}
+"""
 
 COMPLETION_SYSTEM_PROMPT = """
 You are an application built to provide helpful code completion suggestions.
@@ -401,17 +410,21 @@ class BaseProvider(BaseModel, metaclass=ProviderMetaclass):
                         CHAT_SYSTEM_PROMPT
                     ).format(provider_name=name, local_model_id=self.model_id),
                     MessagesPlaceholder(variable_name="history"),
-                    HumanMessagePromptTemplate.from_template("{input}"),
+                    HumanMessagePromptTemplate.from_template(
+                        HUMAN_MESSAGE_TEMPLATE,
+                        template_format="jinja2",
+                    ),
                 ]
             )
         else:
             return PromptTemplate(
-                input_variables=["history", "input"],
+                input_variables=["history", "input", "context"],
                 template=CHAT_SYSTEM_PROMPT.format(
                     provider_name=name, local_model_id=self.model_id
                 )
                 + "\n\n"
                 + CHAT_DEFAULT_TEMPLATE,
+                template_format="jinja2",
             )
 
     def get_completion_prompt_template(self) -> PromptTemplate:
@@ -524,6 +537,7 @@ class BaseProvider(BaseModel, metaclass=ProviderMetaclass):
         return prompt_template | self | StrOutputParser()
 
 
+'''
 class AI21Provider(BaseProvider, AI21):
     id = "ai21"
     name = "AI21"
@@ -690,20 +704,6 @@ class HfHubProvider(BaseProvider, HuggingFaceEndpoint):
         return await self._call_in_executor(*args, **kwargs)
 
 
-class OllamaProvider(BaseProvider, Ollama):
-    id = "ollama"
-    name = "Ollama"
-    model_id_key = "model"
-    help = (
-        "See [https://www.ollama.com/library](https://www.ollama.com/library) for a list of models. "
-        "Pass a model's name; for example, `deepseek-coder-v2`."
-    )
-    models = ["*"]
-    registry = True
-    fields = [
-        TextField(key="base_url", label="Base API URL (optional)", format="text"),
-    ]
-
 class TogetherAIProvider(BaseProvider, Together):
     id = "togetherai"
     name = "Together AI"
@@ -750,3 +750,4 @@ class QianfanProvider(BaseProvider, QianfanChatEndpoint):
     model_id_key = "model_name"
     pypi_package_deps = ["qianfan"]
     auth_strategy = MultiEnvAuthStrategy(names=["QIANFAN_AK", "QIANFAN_SK"])
+'''
