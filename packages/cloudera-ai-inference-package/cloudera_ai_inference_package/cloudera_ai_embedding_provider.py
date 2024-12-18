@@ -22,6 +22,15 @@ class ClouderaAIInferenceEmbeddingModelProvider(BaseEmbeddingsProvider, Embeddin
         os.getenv("COPILOT_CONFIG_DIR", ""), model_type="embedding"
     )
 
+    # Read from both config files, as embedding models could still be in the old config file for an older CML version.
+    embedding_ai_inference_models, embedding_models = getCopilotModels(
+        os.getenv("COPILOT_EMBEDDING_CONFIG_DIR", ""), model_type="embedding"
+    )
+
+    # Merge lists, removing duplicates.
+    ai_inference_models = ai_inference_models + embedding_ai_inference_models
+    models = models + embedding_models
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_endpoint = self._get_inference_endpoint()

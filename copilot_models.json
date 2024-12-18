@@ -7,22 +7,22 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "model": "anthropic.claude-3-5-haiku-20241022-v1:0",
       "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "anthropic.claude-3-haiku-20240307-v1:0",
+      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
       "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "anthropic.claude-3-opus-20240229-v1:0",
-      "provider_id": "bedrock-chat"
+      "model": "meta.llama3-1-70b-instruct-v1:0",
+      "provider_id": "bedrock"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "meta.llama3-70b-instruct-v1:0",
+      "model": "meta.llama3-1-405b-instruct-v1:0",
       "provider_id": "bedrock"
     },
     {
@@ -32,12 +32,7 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "amazon.titan-embed-text-v1",
-      "provider_id": "bedrock"
-    },
-    {
-      "provider": "Amazon Bedrock",
-      "model": "amazon.titan-embed-text-v2:0",
+      "model": "mistral.mistral-large-2402-v1:0",
       "provider_id": "bedrock"
     }
   ]

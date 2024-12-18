@@ -493,6 +493,13 @@ class ModelProviderHandler(ProviderHandler):
         if copilot_config and "thirdPartyModels" in copilot_config and copilot_config["thirdPartyModels"]:
             third_party_models = copilot_config["thirdPartyModels"]
 
+        copilot_embedding_config_dir = os.getenv("COPILOT_EMBEDDING_CONFIG_DIR")
+        if copilot_embedding_config_dir and os.path.exists(copilot_embedding_config_dir):
+            f = open(copilot_embedding_config_dir)
+            copilot_embedding_config = json.load(f)
+            if copilot_embedding_config and "thirdPartyModels" in copilot_embedding_config and copilot_embedding_config["thirdPartyModels"]:
+                third_party_models += copilot_embedding_config["thirdPartyModels"]
+
         # Fill in provider_id if it is missing.
         for third_party_model in third_party_models:
             print(third_party_model)
