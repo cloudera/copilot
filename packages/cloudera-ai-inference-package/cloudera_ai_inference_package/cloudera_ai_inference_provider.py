@@ -31,6 +31,8 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
     ai_inference_models, models = getCopilotModels(copilot_config_dir, model_type="inference")
     jwt_path = '/tmp/jwt'
 
+    MAX_TOKENS = 2048
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model = kwargs.get("model_id")
@@ -93,7 +95,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
             # OpenAI Chat completions API
             request_messages = self.BuildChatCompletionMessage(messages)
 
-            request = {"messages": request_messages, "model": self.model, "temperature": 1, "max_tokens": 256, "stream": True}
+            request = {"messages": request_messages, "model": self.model, "temperature": 1, "max_tokens": MAX_TOKENS, "stream": True}
             logging.info(f"request: {request}")
             try:
                 r = requests.post(
@@ -122,7 +124,7 @@ class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LL
             prompt = self.BuildCompletionPrompt(messages)
             req_data = '{"prompt": "' + prompt.encode('unicode_escape').decode("utf-8")
 
-            my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":256,"stream":true}'
+            my_req_data = req_data + '","model":"' + self.model + '","temperature":1,"max_tokens":' + str(MAX_TOKENS) + ',"stream":true}'
             logging.info('req:')
             logging.info(my_req_data)
 
