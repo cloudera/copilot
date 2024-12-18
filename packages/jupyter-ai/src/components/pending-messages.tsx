@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { AiService } from '../handler';
 import { ChatMessageHeader } from './chat-messages';
+import { ChatHandler } from '../chat_handler';
 
 type PendingMessagesProps = {
   messages: AiService.PendingMessage[];
+  chatHandler: ChatHandler;
 };
 
 type PendingMessageElementProps = {
@@ -58,7 +60,8 @@ export function PendingMessages(
       time: lastMessage.time,
       body: '',
       reply_to: '',
-      persona: lastMessage.persona
+      persona: lastMessage.persona,
+      metadata: {}
     });
 
     // timestamp format copied from ChatMessage
@@ -85,6 +88,7 @@ export function PendingMessages(
     >
       <ChatMessageHeader
         message={agentMessage}
+        chatHandler={props.chatHandler}
         timestamp={timestamp}
         sx={{
           marginBottom: 4

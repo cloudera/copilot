@@ -1,11 +1,11 @@
 {
   "name": "@jupyter-ai/magics",
-  "version": "2.20.0+cloudera",
+  "version": "2.28.3+cloudera",
   "description": "Jupyter AI magics Python package. Not published on NPM.",
   "private": true,
-  "homepage": "https://github.infra.cloudera.com/Sense/copilot",
+  "homepage": "https://github.com/cloudera/copilot",
   "bugs": {
-    "url": "https://github.infra.cloudera.com/Sense/copilot/issues"
+    "url": "https://github.com/cloudera/copilot/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.infra.cloudera.com/Sense/copilot.git"
+    "url": "https://github.com/cloudera/copilot.git"
   },
   "scripts": {
     "dev-install": "pip install -e \".[dev,all]\"",

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 
 import { CodeToolbar, CodeToolbarProps } from './code-blocks/code-toolbar';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { AiService } from '../handler';
 
 const MD_MIME_TYPE = 'text/markdown';
 const RENDERMIME_MD_CLASS = 'jp-ai-rendermime-markdown';
@@ -10,6 +11,10 @@ const RENDERMIME_MD_CLASS = 'jp-ai-rendermime-markdown';
 type RendermimeMarkdownProps = {
   markdownStr: string;
   rmRegistry: IRenderMimeRegistry;
+  /**
+   * Reference to the parent message object in the Jupyter AI chat.
+   */
+  parentMessage?: AiService.ChatMessage;
   /**
    * Whether the message is complete. This is generally `true` except in the
    * case where `markdownStr` contains the incomplete contents of a
@@ -19,7 +24,12 @@ type RendermimeMarkdownProps = {
 };
 
 /**
- * Takes \( and returns \\(. Escapes LaTeX delimeters by adding extra backslashes where needed for proper rendering by @jupyterlab/rendermime.
+ * Escapes backslashes in LaTeX delimiters such that they appear in the DOM
+ * after the initial MarkDown render. For example, this function takes '\(` and
+ * returns `\\(`.
+ *
+ * Required for proper rendering of MarkDown + LaTeX markup in the chat by
+ * `ILatexTypesetter`.
  */
 function escapeLatexDelimiters(text: string) {
   return text
@@ -52,18 +62,22 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
    */
   useEffect(() => {
     const renderContent = async () => {
+      // initialize mime model
       const mdStr = escapeLatexDelimiters(props.markdownStr);
       const model = props.rmRegistry.createModel({
         data: { [MD_MIME_TYPE]: mdStr }
       });
 
+      // step 1: render markdown
       await renderer.renderModel(model);
-      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
       if (!renderer.node) {
         throw new Error(
           'Rendermime was unable to render Markdown content within a chat message. Please report this upstream to Jupyter AI on GitHub.'
         );
       }
+
+      // step 2: render LaTeX via MathJax
+      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
 
       // insert the rendering into renderingContainer if not yet inserted
       if (renderingContainer.current !== null && !renderingInserted.current) {
@@ -87,7 +101,10 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
         );
         newCodeToolbarDefns.push([
           codeToolbarRoot,
-          { content: preBlock.textContent || '' }
+          {
+            code: preBlock.textContent || '',
+            parentMessage: props.parentMessage
+          }
         ]);
       });
 
@@ -95,7 +112,12 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
     };
 
     renderContent();
-  }, [props.markdownStr, props.complete, props.rmRegistry]);
+  }, [
+    props.markdownStr,
+    props.complete,
+    props.rmRegistry,
+    props.parentMessage
+  ]);
 
   return (
     <div className={RENDERMIME_MD_CLASS}>

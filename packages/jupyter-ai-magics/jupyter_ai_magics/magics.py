@@ -9,7 +9,6 @@ from typing import Optional
 
 import click
 import traitlets
-from IPython import get_ipython
 from IPython.core.magic import Magics, line_cell_magic, magics_class
 from IPython.display import HTML, JSON, Markdown, Math
 from jupyter_ai_magics.aliases import MODEL_ID_ALIASES
@@ -17,6 +16,7 @@ from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.utils import decompose_model_id, get_lm_providers
 from langchain.chains import LLMChain
 from langchain.schema import HumanMessage
+from langchain_core.messages import AIMessage
 
 from ._version import __version__
 from .parsers import (
@@ -26,6 +26,7 @@ from .parsers import (
     HelpArgs,
     ListArgs,
     RegisterArgs,
+    ResetArgs,
     UpdateArgs,
     VersionArgs,
     cell_magic_parser,
@@ -137,9 +138,27 @@ class AiMagics(Magics):
         config=True,
     )
 
+    default_language_model = traitlets.Unicode(
+        default_value=None,
+        allow_none=True,
+        help="""Default language model to use, as string in the format
+        <provider-id>:<model-id>, defaults to None.
+        """,
+        config=True,
+    )
+
+    max_history = traitlets.Int(
+        default_value=2,
+        allow_none=False,
+        help="""Maximum number of exchanges (user/assistant) to include in the history
+        when invoking a chat model, defaults to 2.
+        """,
+        config=True,
+    )
+
     def __init__(self, shell):
         super().__init__(shell)
-        self.transcript_openai = []
+        self.transcript = []
 
         # suppress warning when using old Anthropic provider
         warnings.filterwarnings(
@@ -258,7 +277,7 @@ class AiMagics(Magics):
         if not acceptable_name.match(name):
             return False
 
-        ipython = get_ipython()
+        ipython = self.shell
         return name in ipython.user_ns and isinstance(ipython.user_ns[name], LLMChain)
 
     # Is this an acceptable name for an alias?
@@ -276,7 +295,7 @@ class AiMagics(Magics):
     def _safely_set_target(self, register_name, target):
         # If target is a string, treat this as an alias to another model.
         if self._is_langchain_chain(target):
-            ip = get_ipython()
+            ip = self.shell
             self.custom_model_registry[register_name] = ip.user_ns[target]
         else:
             # Ensure that the destination is properly formatted
@@ -405,7 +424,7 @@ class AiMagics(Magics):
         no_errors = "There have been no errors since the kernel started."
 
         # Find the most recent error.
-        ip = get_ipython()
+        ip = self.shell
         if "Err" not in ip.user_ns:
             return TextOrMarkdown(no_errors, no_errors)
 
@@ -429,6 +448,12 @@ class AiMagics(Magics):
         cell_args = CellArgs(**values)
 
         return self.run_ai_cell(cell_args, prompt)
+
+    def _append_exchange(self, prompt: str, output: str):
+        """Appends a conversational exchange between user and an OpenAI Chat
+        model to a transcript that will be included in future exchanges."""
+        self.transcript.append(HumanMessage(prompt))
+        self.transcript.append(AIMessage(output))
 
     def _decompose_model_id(self, model_id: str):
         """Breaks down a model ID into a two-tuple (provider_id, local_model_id). Returns (None, None) if indeterminate."""
@@ -463,7 +488,7 @@ class AiMagics(Magics):
                 text=output,
                 replace=False,
             )
-            ip = get_ipython()
+            ip = self.shell
             ip.payload_manager.write_payload(new_cell_payload)
             return HTML(
                 "AI generated code inserted below &#11015;&#65039;", metadata=md
@@ -492,6 +517,9 @@ class AiMagics(Magics):
 
     def handle_version(self, args: VersionArgs):
         return __version__
+
+    def handle_reset(self, args: ResetArgs):
+        self.transcript = []
 
     def run_ai_cell(self, args: CellArgs, prompt: str):
         provider_id, local_model_id = self._decompose_model_id(args.model_id)
@@ -568,9 +596,10 @@ class AiMagics(Magics):
         prompt = provider.get_prompt_template(args.format).format(prompt=prompt)
 
         # interpolate user namespace into prompt
-        ip = get_ipython()
+        ip = self.shell
         prompt = prompt.format_map(FormatDict(ip.user_ns))
 
+        context = self.transcript[-2 * self.max_history :] if self.max_history else []
         if provider.is_chat_provider:
             ut = UsageTracker()
             ut._SendCopilotEvent({
@@ -580,12 +609,29 @@ class AiMagics(Magics):
                 "model_provider_id": provider_id,
                 "prompt_word_count": len(orig_prompt.split(" ")),
             })
-            result = provider.generate([[HumanMessage(content=prompt)]])
+            result = provider.generate([[*context, HumanMessage(content=prompt)]])
         else:
             # generate output from model via provider
-            result = provider.generate([prompt])
+            if context:
+                inputs = "\n\n".join(
+                    [
+                        (
+                            f"AI: {message.content}"
+                            if message.type == "ai"
+                            else f"{message.type.title()}: {message.content}"
+                        )
+                        for message in context + [HumanMessage(content=prompt)]
+                    ]
+                )
+            else:
+                inputs = prompt
+            result = provider.generate([inputs])
 
         output = result.generations[0][0].text
+
+        # append exchange to transcript
+        self._append_exchange(prompt, output)
+
         md = {"jupyter_ai": {"provider_id": provider_id, "model_id": local_model_id}}
 
         return self.display_output(output, args.format, md)
@@ -593,12 +639,23 @@ class AiMagics(Magics):
     @line_cell_magic
     def ai(self, line, cell=None):
         raw_args = line.split(" ")
+        default_map = {"model_id": self.default_language_model}
         if cell:
-            args = cell_magic_parser(raw_args, prog_name="%%ai", standalone_mode=False)
+            args = cell_magic_parser(
+                raw_args,
+                prog_name="%%ai",
+                standalone_mode=False,
+                default_map={"cell_magic_parser": default_map},
+            )
         else:
-            args = line_magic_parser(raw_args, prog_name="%ai", standalone_mode=False)
+            args = line_magic_parser(
+                raw_args,
+                prog_name="%ai",
+                standalone_mode=False,
+                default_map={"error": default_map},
+            )
 
-        if args == 0:
+        if args == 0 and self.default_language_model is None:
             # this happens when `--help` is called on the root command, in which
             # case we want to exit early.
             return
@@ -619,6 +676,8 @@ class AiMagics(Magics):
                 return self.handle_update(args)
             if args.type == "version":
                 return self.handle_version(args)
+            if args.type == "reset":
+                return self.handle_reset(args)
         except ValueError as e:
             print(e, file=sys.stderr)
             return
@@ -636,7 +695,7 @@ class AiMagics(Magics):
         prompt = cell.strip()
 
         # interpolate user namespace into prompt
-        ip = get_ipython()
+        ip = self.shell
         prompt = prompt.format_map(FormatDict(ip.user_ns))
 
         return self.run_ai_cell(args, prompt)
