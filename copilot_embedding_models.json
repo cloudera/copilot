@@ -1,5 +1,5 @@
 {
-  "copilot_models": [
+  "copilot_embedding_models": [
     {
       "provider": "Amazon Bedrock",
       "model": "amazon.titan-embed-text-v2:0",
