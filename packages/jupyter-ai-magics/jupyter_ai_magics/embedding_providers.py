@@ -7,12 +7,14 @@ from jupyter_ai_magics.providers import (
     MultiEnvAuthStrategy,
 )
 from langchain.pydantic_v1 import BaseModel, Extra
+'''
 from langchain_community.embeddings import (
     GPT4AllEmbeddings,
     HuggingFaceHubEmbeddings,
     OllamaEmbeddings,
     QianfanEmbeddingsEndpoint,
 )
+'''
 
 
 class BaseEmbeddingsProvider(BaseModel):
@@ -65,6 +67,7 @@ class BaseEmbeddingsProvider(BaseModel):
         super().__init__(*args, **kwargs, **model_kwargs)
 
 
+'''
 class OllamaEmbeddingsProvider(BaseEmbeddingsProvider, OllamaEmbeddings):
     id = "ollama"
     name = "Ollama"
@@ -122,3 +125,4 @@ class QianfanEmbeddingsEndpointProvider(
     model_id_key = "model"
     pypi_package_deps = ["qianfan"]
     auth_strategy = MultiEnvAuthStrategy(names=["QIANFAN_AK", "QIANFAN_SK"])
+'''
