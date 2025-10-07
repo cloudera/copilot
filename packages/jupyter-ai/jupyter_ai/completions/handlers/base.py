@@ -14,7 +14,7 @@ from jupyter_ai.completions.models import (
     InlineCompletionStreamChunk,
 )
 from jupyter_server.base.handlers import JupyterHandler
-from langchain.pydantic_v1 import ValidationError
+from pydantic import ValidationError
 
 
 class BaseInlineCompletionHandler(
@@ -61,7 +61,7 @@ class BaseInlineCompletionHandler(
 
     def reply(self, reply: Union[InlineCompletionReply, InlineCompletionStreamChunk]):
         """Write a reply object to the WebSocket connection."""
-        message = reply.dict()
+        message = reply.model_dump()
         super().write_message(message)
 
     def initialize(self):
@@ -129,9 +129,10 @@ class BaseInlineCompletionHandler(
         `handle_stream_request()`. This base class provides a default
         implementation, which may be overridden by subclasses.
         """
+        title = e.args[0] if e.args else "Exception"
         error = CompletionError(
             type=e.__class__.__name__,
-            title=e.args[0] if e.args else "Exception",
+            title=title,
             traceback=traceback.format_exc(),
         )
         self.reply(

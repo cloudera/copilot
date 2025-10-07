@@ -19,6 +19,7 @@ from langchain.schema import HumanMessage
 from langchain_core.messages import AIMessage
 
 from ._version import __version__
+from .base_provider import BaseProvider
 from .parsers import (
     CellArgs,
     DeleteArgs,
@@ -32,7 +33,6 @@ from .parsers import (
     cell_magic_parser,
     line_magic_parser,
 )
-from .providers import BaseProvider
 
 
 class TextOrMarkdown:
@@ -443,7 +443,7 @@ class AiMagics(Magics):
 
         prompt = f"Explain the following error:\n\n{last_error}"
         # Set CellArgs based on ErrorArgs
-        values = args.dict()
+        values = args.model_dump()
         values["type"] = "root"
         cell_args = CellArgs(**values)
 
@@ -483,13 +483,7 @@ class AiMagics(Magics):
             lang_indicator = r"^```[a-zA-Z0-9]*\n"
             output = re.sub(lang_indicator, "", output)
             output = re.sub(r"\n```$", "", output)
-            new_cell_payload = dict(
-                source="set_next_input",
-                text=output,
-                replace=False,
-            )
-            ip = self.shell
-            ip.payload_manager.write_payload(new_cell_payload)
+            self.shell.set_next_input(output, replace=False)
             return HTML(
                 "AI generated code inserted below &#11015;&#65039;", metadata=md
             )

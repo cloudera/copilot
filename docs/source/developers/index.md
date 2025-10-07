@@ -8,14 +8,28 @@ please see our {doc}`contributor's guide </contributors/index>`.
 
 ## Pydantic compatibility
 
-Jupyter AI is fully compatible with Python environments using Pydantic v1
-or Pydantic v2. Jupyter AI imports Pydantic classes from the
-`langchain.pydantic_v1` module. Developers should do the same when they extend
-Jupyter AI classes.
+- `jupyter-ai<2.29.0` requires Pydantic v1 **or** v2, but only supports
+LangChain v0.2, which is now outdated.
 
-For more details about using `langchain.pydantic_v1` in an environment with
-Pydantic v2 installed, see the
-[LangChain documentation on Pydantic compatibility](https://python.langchain.com/docs/guides/pydantic_compatibility).
+    - Internally, `jupyter-ai<2.29.0` uses the Pydantic v1 API through a
+    vendored module provided by LangChain. Therefore, if you are developing
+    extensions for `jupyter-ai<2.29.0`, you should import Pydantic objects (e.g.
+    `BaseModel`) from the `langchain.pydantic_v1` module. In this context, you
+    should *not* use the `pydantic` module (as it may be Pydantic v1 or v2).
+
+- `jupyter-ai>=2.29.0` requires Pydantic v2 (**not** v1), but supports LangChain
+`>=0.3`.
+
+    - Internally, `jupyter-ai>=2.29.0` uses the Pydantic v2 API directly through
+    the `pydantic` module. Therefore, if you are developing extensions for
+    `jupyter-ai>=2.29.0`, you should import Pydantic objects (e.g. `BaseModel`)
+    from the `pydantic` module.
+
+    - For context, LangChain v0.3 requires Pydantic v2. This motivated the
+    upgrade to the Pydantic v2 API.
+
+For more details about Pydantic & LangChain version compatibility, see the
+[LangChain documentation on Pydantic compatibility](https://python.langchain.com/docs/how_to/pydantic_compatibility/).
 
 ## Jupyter AI module cookiecutter
 
@@ -447,6 +461,38 @@ custom = "custom_package:CustomChatHandler"
 Then, install your package so that Jupyter AI adds custom chat handlers
 to the existing chat handlers.
 
+## Overriding or disabling a built-in slash command
+
+You can define a custom implementation of a built-in slash command by following the steps above on building a custom slash command. This will involve creating and installing a new package. Then, to override a chat handler with this custom implementation, provide an entry point with a name matching the ID of the chat handler to override.
+
+For example, to override `/ask` with a  `CustomAskChatHandler` class, add the following to `pyproject.toml` and re-install the new package:
+
+```python
+[project.entry-points."jupyter_ai.chat_handlers"]
+ask = "<module-path>:CustomAskChatHandler"
+```
+
+You can also disable a built-in slash command by providing a mostly-empty chat handler with `disabled = True`. For example, to disable the default `ask` chat handler of Jupyter AI, define a new `DisabledAskChatHandler`:
+
+```python
+class DisabledAskChatHandler:
+    id = 'ask'
+    disabled = True
+```
+
+Then, provide this as an entry point in your custom package:
+```python
+[project.entry-points."jupyter_ai.chat_handlers"]
+ask = "<module-path>:DisabledAskChatHandler"
+```
+
+Finally, re-install your custom package. After starting JupyterLab, the `/ask` command should now be disabled.
+
+:::{warning}
+:name: entry-point-name
+To override or disable a built-in slash command via an entry point, the name of the entry point (left of the `=` symbol) must match the chat handler ID exactly.
+:::
+
 ## Streaming output from custom slash commands
 
 Jupyter AI supports streaming output in the chat session. When a response is
@@ -478,7 +524,7 @@ def create_llm_chain(
         prompt_template = FIX_PROMPT_TEMPLATE
         self.prompt_template = prompt_template
 
-        runnable = prompt_template | llm  # type:ignore
+        runnable = prompt_template | llm | StrOutputParser()  # type:ignore
         self.llm_chain = runnable
 ```
 
