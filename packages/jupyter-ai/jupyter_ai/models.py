@@ -1,9 +1,9 @@
 import json
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from jupyter_ai_magics import Persona
 from jupyter_ai_magics.providers import AuthStrategy, Field
-from langchain.pydantic_v1 import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 DEFAULT_CHUNK_SIZE = 2000
 DEFAULT_CHUNK_OVERLAP = 100
@@ -12,7 +12,7 @@ DEFAULT_CHUNK_OVERLAP = 100
 class CellError(BaseModel):
     name: str
     value: str
-    traceback: List[str]
+    traceback: list[str]
 
 
 class TextSelection(BaseModel):
@@ -37,7 +37,7 @@ Selection = Union[TextSelection, CellSelection, CellWithErrorSelection]
 # the type of message used to chat with the agent
 class ChatRequest(BaseModel):
     prompt: str
-    selection: Optional[Selection]
+    selection: Optional[Selection] = None
 
 
 class StopRequest(BaseModel):
@@ -54,7 +54,7 @@ class StopRequest(BaseModel):
 
 class ClearRequest(BaseModel):
     type: Literal["clear"] = "clear"
-    target: Optional[str]
+    target: Optional[str] = None
     """
     Message ID of the HumanChatMessage to delete an exchange at.
     If not provided, this requests the backend to clear all messages.
@@ -67,8 +67,8 @@ class ChatUser(BaseModel):
     initials: str
     name: str
     display_name: str
-    color: Optional[str]
-    avatar_url: Optional[str]
+    color: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class ChatClient(ChatUser):
@@ -95,7 +95,7 @@ class BaseAgentMessage(BaseModel):
     this defaults to a description of `ClouderaCopilotPersona`.
     """
 
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     """
     Message metadata set by a provider after fully processing an input. The
     contents of this dictionary are provider-dependent, and can be any
@@ -122,14 +122,15 @@ class AgentStreamChunkMessage(BaseModel):
     """The string to append to the `AgentStreamMessage` referenced by `id`."""
     stream_complete: bool
     """Indicates whether this chunk completes the stream referenced by `id`."""
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     """
     The metadata of the stream referenced by `id`. Metadata from the latest
     chunk should override any metadata from previous chunks. See the docstring
     on `BaseAgentMessage.metadata` for information.
     """
 
-    @validator("metadata")
+    @field_validator("metadata", mode="before")
+    @classmethod
     def validate_metadata(cls, v):
         """Ensure metadata values are JSON serializable"""
         try:
@@ -148,14 +149,14 @@ class HumanChatMessage(BaseModel):
     `prompt` and `selection`."""
     prompt: str
     """The prompt typed into the chat input by the user."""
-    selection: Optional[Selection]
+    selection: Optional[Selection] = None
     """The selection included with the prompt, if any."""
     client: ChatClient
 
 
 class ClearMessage(BaseModel):
     type: Literal["clear"] = "clear"
-    targets: Optional[List[str]] = None
+    targets: Optional[list[str]] = None
     """
     Message IDs of the HumanChatMessage to delete an exchange at.
     If not provided, this instructs the frontend to clear all messages.
@@ -187,8 +188,8 @@ ChatMessage = Union[
 class ChatHistory(BaseModel):
     """History of chat messages"""
 
-    messages: List[ChatMessage]
-    pending_messages: List[PendingMessage]
+    messages: list[ChatMessage]
+    pending_messages: list[PendingMessage]
 
 
 class ConnectionMessage(BaseModel):
@@ -213,18 +214,18 @@ class ListProvidersEntry(BaseModel):
 
     id: str
     name: str
-    model_id_label: Optional[str]
-    models: List[str]
-    help: Optional[str]
+    model_id_label: Optional[str] = None
+    models: list[str]
+    help: Optional[str] = None
     auth_strategy: AuthStrategy
     registry: bool
-    fields: List[Field]
-    chat_models: Optional[List[str]]
-    completion_models: Optional[List[str]]
+    fields: list[Field]
+    chat_models: Optional[list[str]] = None
+    completion_models: Optional[list[str]] = None
 
 
 class ListProvidersResponse(BaseModel):
-    providers: List[ListProvidersEntry]
+    providers: list[ListProvidersEntry]
 
 
 class IndexedDir(BaseModel):
@@ -234,59 +235,60 @@ class IndexedDir(BaseModel):
 
 
 class IndexMetadata(BaseModel):
-    dirs: List[IndexedDir]
+    dirs: list[IndexedDir]
 
 
 class DescribeConfigResponse(BaseModel):
-    model_provider_id: Optional[str]
-    embeddings_provider_id: Optional[str]
+    model_provider_id: Optional[str] = None
+    embeddings_provider_id: Optional[str] = None
     send_with_shift_enter: bool
-    fields: Dict[str, Dict[str, Any]]
+    fields: dict[str, dict[str, Any]]
     # when sending config over REST API, do not include values of the API keys,
     # just the names.
-    api_keys: List[str]
+    api_keys: list[str]
     # timestamp indicating when the configuration file was last read. should be
     # passed to the subsequent UpdateConfig request.
     last_read: int
-    completions_model_provider_id: Optional[str]
-    completions_fields: Dict[str, Dict[str, Any]]
-
-
-def forbid_none(cls, v):
-    assert v is not None, "size may not be None"
-    return v
+    completions_model_provider_id: Optional[str] = None
+    completions_fields: dict[str, dict[str, Any]]
+    embeddings_fields: dict[str, dict[str, Any]]
 
 
 class UpdateConfigRequest(BaseModel):
-    model_provider_id: Optional[str]
-    embeddings_provider_id: Optional[str]
-    send_with_shift_enter: Optional[bool]
-    api_keys: Optional[Dict[str, str]]
-    fields: Optional[Dict[str, Dict[str, Any]]]
+    model_provider_id: Optional[str] = None
+    embeddings_provider_id: Optional[str] = None
+    completions_model_provider_id: Optional[str] = None
+    send_with_shift_enter: Optional[bool] = None
+    api_keys: Optional[dict[str, str]] = None
     # if passed, this will raise an Error if the config was written to after the
     # time specified by `last_read` to prevent write-write conflicts.
-    last_read: Optional[int]
-    completions_model_provider_id: Optional[str]
-    completions_fields: Optional[Dict[str, Dict[str, Any]]]
+    last_read: Optional[int] = None
+    fields: Optional[dict[str, dict[str, Any]]] = None
+    completions_fields: Optional[dict[str, dict[str, Any]]] = None
+    embeddings_fields: Optional[dict[str, dict[str, Any]]] = None
 
-    _validate_send_wse = validator("send_with_shift_enter", allow_reuse=True)(
-        forbid_none
-    )
-    _validate_api_keys = validator("api_keys", allow_reuse=True)(forbid_none)
-    _validate_fields = validator("fields", allow_reuse=True)(forbid_none)
+    @field_validator("send_with_shift_enter", "api_keys", "fields", mode="before")
+    @classmethod
+    def ensure_not_none_if_passed(cls, field_val: Any) -> Any:
+        """
+        Field validator ensuring that certain fields are never `None` if set.
+        """
+        assert field_val is not None, "size may not be None"
+        return field_val
 
 
 class GlobalConfig(BaseModel):
     """Model used to represent the config by ConfigManager. This is exclusive to
     the backend and should never be sent to the client."""
 
-    model_provider_id: Optional[str]
-    embeddings_provider_id: Optional[str]
+    model_provider_id: Optional[str] = None
+    embeddings_provider_id: Optional[str] = None
     send_with_shift_enter: bool
-    fields: Dict[str, Dict[str, Any]]
-    api_keys: Dict[str, str]
-    completions_model_provider_id: Optional[str]
-    completions_fields: Dict[str, Dict[str, Any]]
+    fields: dict[str, dict[str, Any]]
+    api_keys: dict[str, str]
+    completions_model_provider_id: Optional[str] = None
+    completions_fields: dict[str, dict[str, Any]]
+    embeddings_fields: dict[str, dict[str, Any]]
 
 
 class ListSlashCommandsEntry(BaseModel):
@@ -295,7 +297,7 @@ class ListSlashCommandsEntry(BaseModel):
 
 
 class ListSlashCommandsResponse(BaseModel):
-    slash_commands: List[ListSlashCommandsEntry] = []
+    slash_commands: list[ListSlashCommandsEntry] = []
 
 
 class ListOptionsEntry(BaseModel):
@@ -313,4 +315,4 @@ class ListOptionsEntry(BaseModel):
 
 
 class ListOptionsResponse(BaseModel):
-    options: List[ListOptionsEntry] = []
+    options: list[ListOptionsEntry] = []

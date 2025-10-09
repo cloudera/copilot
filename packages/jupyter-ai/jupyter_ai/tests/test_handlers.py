@@ -34,7 +34,7 @@ class MockProvider(BaseProvider, FakeListLLM):
     name = "My Provider"
     model_id_key = "model"
     models = ["model"]
-    should_raise: Optional[bool]
+    should_raise: Optional[bool] = None
 
     def __init__(self, **kwargs):
         if "responses" not in kwargs:
@@ -78,6 +78,7 @@ class TestDefaultChatHandler(DefaultChatHandler):
             chat_handlers={},
             context_providers={},
             message_interrupted={},
+            log_dir="",
         )
 
 
@@ -88,7 +89,11 @@ class TestException(Exception):
 @pytest.fixture
 def chat_client():
     return ChatClient(
-        id=0, username="test", initials="test", name="test", display_name="test"
+        id="test-client-uuid",
+        username="test",
+        initials="test",
+        name="test",
+        display_name="test",
     )
 
 

@@ -1,12 +1,11 @@
 import json
 import logging
 import os
-import shutil
 import time
 from copy import deepcopy
-from typing import List, Optional, Type, Union
+from typing import Optional, Union
 
-from deepmerge import always_merger as Merger
+from deepmerge import Merger, always_merger
 from jsonschema import Draft202012Validator as Validator
 from jupyter_ai.models import DescribeConfigResponse, GlobalConfig, UpdateConfigRequest
 from jupyter_ai_magics import ClouderaCopilotPersona, Persona
@@ -61,7 +60,7 @@ class BlockedModelError(Exception):
     pass
 
 
-def _validate_provider_authn(config: GlobalConfig, provider: Type[AnyProvider]):
+def _validate_provider_authn(config: GlobalConfig, provider: type[AnyProvider]):
     # TODO: handle non-env auth strategies
     if not provider.auth_strategy or provider.auth_strategy.type != "env":
         return
@@ -98,9 +97,9 @@ class ConfigManager(Configurable):
         config=True,
     )
 
-    model_provider_id: Optional[str]
-    embeddings_provider_id: Optional[str]
-    completions_model_provider_id: Optional[str]
+    model_provider_id: Optional[str] = None
+    embeddings_provider_id: Optional[str] = None
+    completions_model_provider_id: Optional[str] = None
 
     def __init__(
         self,
@@ -108,10 +107,10 @@ class ConfigManager(Configurable):
         lm_providers: LmProvidersDict,
         em_providers: EmProvidersDict,
         defaults: dict,
-        allowed_providers: Optional[List[str]] = None,
-        blocked_providers: Optional[List[str]] = None,
-        allowed_models: Optional[List[str]] = None,
-        blocked_models: Optional[List[str]] = None,
+        allowed_providers: Optional[list[str]] = None,
+        blocked_providers: Optional[list[str]] = None,
+        allowed_models: Optional[list[str]] = None,
+        blocked_models: Optional[list[str]] = None,
         *args,
         **kwargs,
     ):
@@ -150,9 +149,53 @@ class ConfigManager(Configurable):
         self._init_config()
 
     def _init_config_schema(self):
-        if not os.path.exists(self.schema_path):
-            os.makedirs(os.path.dirname(self.schema_path), exist_ok=True)
-            shutil.copy(OUR_SCHEMA_PATH, self.schema_path)
+        """
+        Initializes `config_schema.json` in the user's data dir whenever the
+        server extension starts. Users may add custom fields to their config
+        schema to insert new keys into the Jupyter AI config.
+
+        New in v2.31.1: Jupyter AI now merges the user's existing config schema
+        with Jupyter AI's config schema on init. This prevents validation errors
+        on missing keys when users upgrade Jupyter AI from an older version.
+
+        TODO v3: Remove the ability for users to provide a custom config schema.
+        This feature is entirely unused as far as I am aware, and we need to
+        simplify how Jupyter AI handles user configuration in v3 anyways.
+        """
+
+        # ensure the parent directory has been created
+        os.makedirs(os.path.dirname(self.schema_path), exist_ok=True)
+
+        # read existing_schema
+        if os.path.exists(self.schema_path):
+            with open(self.schema_path, encoding="utf-8") as f:
+                existing_schema = json.load(f)
+        else:
+            existing_schema = {}
+
+        # read default_schema
+        with open(OUR_SCHEMA_PATH, encoding="utf-8") as f:
+            default_schema = json.load(f)
+
+        # Create a custom `deepmerge.Merger` object to merge lists using the
+        # 'append_unique' strategy.
+        #
+        # This stops type union declarations like `["string", "null"]` from
+        # growing into `["string", "null", "string", "null"]` on restart.
+        # This fixes issue #1320.
+        merger = Merger(
+            [(list, ["append_unique"]), (dict, ["merge"]), (set, ["union"])],
+            ["override"],
+            ["override"],
+        )
+
+        # merge existing_schema into default_schema
+        # specifying existing_schema as the second argument ensures that
+        # existing_schema always overrides existing keys in default_schema, i.e.
+        # this call only adds new keys in default_schema.
+        schema = merger.merge(default_schema, existing_schema)
+        with open(self.schema_path, encoding="utf-8", mode="w") as f:
+            json.dump(schema, f, indent=self.indentation_depth)
 
     def _init_validator(self) -> None:
         with open(OUR_SCHEMA_PATH, encoding="utf-8") as f:
@@ -162,7 +205,11 @@ class ConfigManager(Configurable):
 
     def _init_config(self):
         default_config = self._init_defaults()
-        if os.path.exists(self.config_path):
+        # if the config file exists, read from it and use our defaults to fill
+        # out any missing fields. otherwise, create a new config file from our
+        # defaults.
+        # the `st_size` check treats empty 0-byte config files as non-existent.
+        if os.path.exists(self.config_path) and os.stat(self.config_path).st_size != 0:
             self._process_existing_config(default_config)
         else:
             self._create_default_config(default_config)
@@ -170,7 +217,9 @@ class ConfigManager(Configurable):
     def _process_existing_config(self, default_config):
         with open(self.config_path, encoding="utf-8") as f:
             existing_config = json.loads(f.read())
-            merged_config = Merger.merge(
+            if "embeddings_fields" not in existing_config:
+                existing_config["embeddings_fields"] = {}
+            merged_config = always_merger.merge(
                 default_config,
                 {k: v for k, v in existing_config.items() if v is not None},
             )
@@ -184,6 +233,7 @@ class ConfigManager(Configurable):
     def _validate_model_ids(self, config):
         lm_provider_keys = ["model_provider_id", "completions_model_provider_id"]
         em_provider_keys = ["embeddings_provider_id"]
+        clm_provider_keys = ["completions_model_provider_id"]
 
         # if the currently selected language or embedding model are
         # forbidden, set them to `None` and log a warning.
@@ -201,6 +251,13 @@ class ConfigManager(Configurable):
                     f"Embedding model {em_id} is forbidden by current allow/blocklists. Setting to None."
                 )
                 setattr(config, em_key, None)
+        for clm_key in clm_provider_keys:
+            clm_id = getattr(config, clm_key)
+            if clm_id is not None and not self._validate_model(clm_id, raise_exc=False):
+                self.log.warning(
+                    f"Completion model {clm_id} is forbidden by current allow/blocklists. Setting to None."
+                )
+                setattr(config, clm_key, None)
 
         # if the currently selected language or embedding model ids are
         # not associated with models, set them to `None` and log a warning.
@@ -218,6 +275,16 @@ class ConfigManager(Configurable):
                     f"No embedding model is associated with '{em_id}'. Setting to None."
                 )
                 setattr(config, em_key, None)
+        for clm_key in clm_provider_keys:
+            clm_id = getattr(config, clm_key)
+            if (
+                clm_id is not None
+                and not get_lm_provider(clm_id, self._lm_providers)[1]
+            ):
+                self.log.warning(
+                    f"No completion model is associated with '{clm_id}'. Setting to None."
+                )
+                setattr(config, clm_key, None)
 
         return config
 
@@ -225,10 +292,11 @@ class ConfigManager(Configurable):
         self._write_config(GlobalConfig(**default_config))
 
     def _init_defaults(self):
-        config_keys = GlobalConfig.__fields__.keys()
+        config_keys = GlobalConfig.model_fields.keys()
         schema_properties = self.validator.schema.get("properties", {})
         default_config = {
-            field: schema_properties.get(field).get("default") for field in config_keys
+            field: schema_properties.get(field, {}).get("default")
+            for field in config_keys
         }
         if self._defaults is None:
             return default_config
@@ -254,6 +322,8 @@ class ConfigManager(Configurable):
         with open(self.config_path, encoding="utf-8") as f:
             self._last_read = time.time_ns()
             raw_config = json.loads(f.read())
+            if "embeddings_fields" not in raw_config:
+                raw_config["embeddings_fields"] = {}
             config = GlobalConfig(**raw_config)
             self._validate_config(config)
             return config
@@ -263,7 +333,7 @@ class ConfigManager(Configurable):
         read and before every write to the config file. Guarantees that the
         config file conforms to the JSON Schema, and that the language and
         embedding models have authn credentials if specified."""
-        self.validator.validate(config.dict())
+        self.validator.validate(config.model_dump())
 
         # validate language model config
         if config.model_provider_id:
@@ -283,6 +353,36 @@ class ConfigManager(Configurable):
             # verify model is authenticated
             _validate_provider_authn(config, lm_provider)
 
+            # verify fields exist for this model if needed
+            if lm_provider.fields and config.model_provider_id not in config.fields:
+                config.fields[config.model_provider_id] = {}
+
+        # validate completions model config
+        if config.completions_model_provider_id:
+            _, completions_provider = get_lm_provider(
+                config.completions_model_provider_id, self._lm_providers
+            )
+
+            # verify model is declared by some provider
+            if not completions_provider:
+                raise ValueError(
+                    f"No language model is associated with '{config.completions_model_provider_id}'."
+                )
+
+            # verify model is not blocked
+            self._validate_model(config.completions_model_provider_id)
+
+            # verify model is authenticated
+            _validate_provider_authn(config, completions_provider)
+
+            # verify completions fields exist for this model if needed
+            if (
+                completions_provider.fields
+                and config.completions_model_provider_id
+                not in config.completions_fields
+            ):
+                config.completions_fields[config.completions_model_provider_id] = {}
+
         # validate embedding model config
         if config.embeddings_provider_id:
             _, em_provider = get_em_provider(
@@ -300,6 +400,13 @@ class ConfigManager(Configurable):
 
             # verify model is authenticated
             _validate_provider_authn(config, em_provider)
+
+            # verify embedding fields exist for this model if needed
+            if (
+                em_provider.fields
+                and config.embeddings_provider_id not in config.embeddings_fields
+            ):
+                config.embeddings_fields[config.embeddings_provider_id] = {}
 
     def _validate_model(self, model_id: str, raise_exc=True):
         """
@@ -325,10 +432,13 @@ class ConfigManager(Configurable):
                     "Model provider included in the provider blocklist."
                 )
 
-            if self._allowed_models and model_id not in self._allowed_models:
+            if (
+                self._allowed_models is not None
+                and model_id not in self._allowed_models
+            ):
                 raise BlockedModelError("Model not included in the model allowlist.")
 
-            if self._blocked_models and model_id in self._blocked_models:
+            if self._blocked_models is not None and model_id in self._blocked_models:
                 raise BlockedModelError("Model included in the model blocklist.")
         except BlockedModelError as e:
             if raise_exc:
@@ -346,13 +456,16 @@ class ConfigManager(Configurable):
         new_config.completions_fields = {
             k: v for k, v in new_config.completions_fields.items() if v
         }
+        new_config.embeddings_fields = {
+            k: v for k, v in new_config.embeddings_fields.items() if v
+        }
 
         self._validate_config(new_config)
         with open(self.config_path, "w") as f:
-            json.dump(new_config.dict(), f, indent=self.indentation_depth)
+            json.dump(new_config.model_dump(), f, indent=self.indentation_depth)
 
     def delete_api_key(self, key_name: str):
-        config_dict = self._read_config().dict()
+        config_dict = self._read_config().model_dump()
         required_keys = []
         for provider in [
             self.lm_provider,
@@ -386,15 +499,15 @@ class ConfigManager(Configurable):
                 if not api_key_value:
                     raise KeyEmptyError("API key value cannot be empty.")
 
-        config_dict = self._read_config().dict()
-        Merger.merge(config_dict, config_update.dict(exclude_unset=True))
+        config_dict = self._read_config().model_dump()
+        always_merger.merge(config_dict, config_update.model_dump(exclude_unset=True))
         self._write_config(GlobalConfig(**config_dict))
 
     # this cannot be a property, as the parent Configurable already defines the
     # self.config attr.
     def get_config(self):
         config = self._read_config()
-        config_dict = config.dict(exclude_unset=True)
+        config_dict = config.model_dump(exclude_unset=True)
         api_key_names = list(config_dict.pop("api_keys").keys())
         return DescribeConfigResponse(
             **config_dict, api_keys=api_key_names, last_read=self._last_read
@@ -459,18 +572,25 @@ class ConfigManager(Configurable):
         # get config fields (e.g. base API URL, etc.)
         if completions:
             fields = config.completions_fields.get(model_uid, {})
+        elif key == "embeddings_provider_id":
+            fields = config.embeddings_fields.get(model_uid, {})
         else:
             fields = config.fields.get(model_uid, {})
 
         # exclude empty fields
         # TODO: modify the config manager to never save empty fields in the
         # first place.
-        for field_key in fields:
-            if isinstance(fields[field_key], str) and not len(fields[field_key]):
-                fields[field_key] = None
+        fields = {
+            k: None if isinstance(v, str) and not len(v) else v
+            for k, v in fields.items()
+        }
 
         # get authn fields
-        _, Provider = get_em_provider(model_uid, listing)
+        _, Provider = (
+            get_em_provider(model_uid, listing)
+            if key == "embeddings_provider_id"
+            else get_lm_provider(model_uid, listing)
+        )
         authn_fields = {}
         if Provider.auth_strategy and Provider.auth_strategy.type == "env":
             keyword_param = (

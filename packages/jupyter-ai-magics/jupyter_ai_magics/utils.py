@@ -1,18 +1,18 @@
 import logging
-from typing import Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import Literal, Optional, Union
 
 from importlib_metadata import entry_points
 from jupyter_ai_magics.aliases import MODEL_ID_ALIASES
+from jupyter_ai_magics.base_provider import BaseProvider
 from jupyter_ai_magics.embedding_providers import BaseEmbeddingsProvider
-from jupyter_ai_magics.providers import BaseProvider
 
 Logger = Union[logging.Logger, logging.LoggerAdapter]
-LmProvidersDict = Dict[str, BaseProvider]
-EmProvidersDict = Dict[str, BaseEmbeddingsProvider]
+LmProvidersDict = dict[str, BaseProvider]
+EmProvidersDict = dict[str, BaseEmbeddingsProvider]
 AnyProvider = Union[BaseProvider, BaseEmbeddingsProvider]
-ProviderDict = Dict[str, AnyProvider]
-ProviderRestrictions = Dict[
-    Literal["allowed_providers", "blocked_providers"], Optional[List[str]]
+ProviderDict = dict[str, AnyProvider]
+ProviderRestrictions = dict[
+    Literal["allowed_providers", "blocked_providers"], Optional[list[str]]
 ]
 
 
@@ -80,8 +80,8 @@ def get_em_providers(
 
 
 def decompose_model_id(
-    model_id: str, providers: Dict[str, BaseProvider]
-) -> Tuple[str, str]:
+    model_id: str, providers: dict[str, BaseProvider]
+) -> tuple[str, str]:
     """Breaks down a model ID into a two-tuple (provider_id, local_model_id). Returns (None, None) if indeterminate."""
     if model_id in MODEL_ID_ALIASES:
         model_id = MODEL_ID_ALIASES[model_id]
@@ -104,7 +104,7 @@ def decompose_model_id(
 
 def get_lm_provider(
     model_id: str, lm_providers: LmProvidersDict
-) -> Tuple[str, Type[BaseProvider]]:
+) -> tuple[str, type[BaseProvider]]:
     """Gets a two-tuple (<local-model-id>, <provider-class>) specified by a
     global model ID."""
     return _get_provider(model_id, lm_providers)
@@ -112,7 +112,7 @@ def get_lm_provider(
 
 def get_em_provider(
     model_id: str, em_providers: EmProvidersDict
-) -> Tuple[str, Type[BaseEmbeddingsProvider]]:
+) -> tuple[str, type[BaseEmbeddingsProvider]]:
     """Gets a two-tuple (<local-model-id>, <provider-class>) specified by a
     global model ID."""
     return _get_provider(model_id, em_providers)
@@ -121,9 +121,9 @@ def get_em_provider(
 def is_provider_allowed(provider_id: str, restrictions: ProviderRestrictions) -> bool:
     allowed = restrictions["allowed_providers"]
     blocked = restrictions["blocked_providers"]
-    if blocked and provider_id in blocked:
+    if blocked is not None and provider_id in blocked:
         return False
-    if allowed and provider_id not in allowed:
+    if allowed is not None and provider_id not in allowed:
         return False
     return True
 

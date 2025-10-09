@@ -1,6 +1,6 @@
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
-from langchain.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 
 
 class InlineCompletionRequest(BaseModel):
@@ -14,19 +14,19 @@ class InlineCompletionRequest(BaseModel):
     number: int
     # prefix should include full text of the current cell preceding the cursor
     prefix: str
-    # suffix should include full text of the current cell preceding the cursor
+    # suffix should include full text of the current cell following the cursor
     suffix: str
     # media type for the current language, e.g. `text/x-python`
     mime: str
     # whether to stream the response (if supported by the model)
     stream: bool
     # path to the notebook of file for which the completions are generated
-    path: Optional[str]
+    path: Optional[str] = None
     # language inferred from the document mime type (if possible)
-    language: Optional[str]
+    language: Optional[str] = None
     # identifier of the cell for which the completions are generated if in a notebook
     # previous cells and following cells can be used to learn the wider context
-    cell_id: Optional[str]
+    cell_id: Optional[str] = None
 
 
 class InlineCompletionItem(BaseModel):
@@ -36,9 +36,9 @@ class InlineCompletionItem(BaseModel):
     """
 
     insertText: str
-    filterText: Optional[str]
-    isIncomplete: Optional[bool]
-    token: Optional[str]
+    filterText: Optional[str] = None
+    isIncomplete: Optional[bool] = None
+    token: Optional[str] = None
 
 
 class CompletionError(BaseModel):
@@ -50,7 +50,7 @@ class CompletionError(BaseModel):
 class InlineCompletionList(BaseModel):
     """Reflection of JupyterLab's `IInlineCompletionList`."""
 
-    items: List[InlineCompletionItem]
+    items: list[InlineCompletionItem]
 
 
 class InlineCompletionReply(BaseModel):
@@ -59,7 +59,7 @@ class InlineCompletionReply(BaseModel):
     list: InlineCompletionList
     # number of request for which we are replying
     reply_to: int
-    error: Optional[CompletionError]
+    error: Optional[CompletionError] = None
 
 
 class InlineCompletionStreamChunk(BaseModel):
@@ -69,7 +69,7 @@ class InlineCompletionStreamChunk(BaseModel):
     response: InlineCompletionItem
     reply_to: int
     done: bool
-    error: Optional[CompletionError]
+    error: Optional[CompletionError] = None
 
 
 __all__ = [

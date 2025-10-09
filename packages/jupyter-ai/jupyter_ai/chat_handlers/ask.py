@@ -1,5 +1,4 @@
 import argparse
-from typing import Dict, Type
 
 from jupyter_ai.models import HumanChatMessage
 from jupyter_ai_magics.models.usage_tracking import UsageTracker
@@ -9,6 +8,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 
 from .base import BaseChatHandler, SlashCommandRoutingType
+from .learn import LearnChatHandler, Retriever
 
 PROMPT_TEMPLATE = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
 
@@ -17,6 +17,16 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:"""
 CONDENSE_PROMPT = PromptTemplate.from_template(PROMPT_TEMPLATE)
+
+
+class CustomLearnException(Exception):
+    """Exception raised when Jupyter AI's /ask command is used without the required /learn command."""
+
+    def __init__(self):
+        super().__init__(
+            "Jupyter AI's default /ask command requires the default /learn command. "
+            "If you are overriding /learn via the entry points API, be sure to also override or disable /ask."
+        )
 
 
 class AskChatHandler(BaseChatHandler):
@@ -34,15 +44,28 @@ class AskChatHandler(BaseChatHandler):
 
     uses_llm = True
 
-    def __init__(self, retriever, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._retriever = retriever
         self.parser.prog = "/ask"
         self.parser.add_argument("query", nargs=argparse.REMAINDER)
+        # NOTE: devs should use self.retriever property to access the retriever
+        self._retriever = None  # Will be set when accessed
+
+    @property
+    def retriever(self):
+        """Lazy-loads and caches the retriever instance"""
+        if self._retriever is None:
+            learn_chat_handler = self.chat_handlers.get("/learn")
+            if not isinstance(learn_chat_handler, LearnChatHandler):
+                raise CustomLearnException()
+
+            self._retriever = Retriever(learn_chat_handler=learn_chat_handler)
+
+        return self._retriever  # Return cached instance
 
     def create_llm_chain(
-        self, provider: Type[BaseProvider], provider_params: Dict[str, str]
+        self, provider: type[BaseProvider], provider_params: dict[str, str]
     ):
         unified_parameters = {
             **provider_params,
@@ -52,9 +75,10 @@ class AskChatHandler(BaseChatHandler):
         memory = ConversationBufferWindowMemory(
             memory_key="chat_history", return_messages=True, k=2
         )
+
         self.llm_chain = ConversationalRetrievalChain.from_llm(
             self.llm,
-            self._retriever,
+            self.retriever,
             memory=memory,
             condense_question_prompt=CONDENSE_PROMPT,
             verbose=False,

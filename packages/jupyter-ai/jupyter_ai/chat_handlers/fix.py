@@ -1,9 +1,8 @@
-from typing import Dict, Type
-
 from jupyter_ai.models import CellWithErrorSelection, HumanChatMessage
 from jupyter_ai_magics.models.usage_tracking import UsageTracker
 from jupyter_ai_magics.providers import BaseProvider
 from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 from .base import BaseChatHandler, SlashCommandRoutingType
 
@@ -67,7 +66,7 @@ class FixChatHandler(BaseChatHandler):
         self.prompt_template = None
 
     def create_llm_chain(
-        self, provider: Type[BaseProvider], provider_params: Dict[str, str]
+        self, provider: type[BaseProvider], provider_params: dict[str, str]
     ):
         unified_parameters = {
             **provider_params,
@@ -77,7 +76,7 @@ class FixChatHandler(BaseChatHandler):
         self.llm = llm
         prompt_template = FIX_PROMPT_TEMPLATE
 
-        runnable = prompt_template | llm  # type:ignore
+        runnable = prompt_template | llm | StrOutputParser()  # type:ignore
         self.llm_chain = runnable
 
     async def process_message(self, message: HumanChatMessage):
