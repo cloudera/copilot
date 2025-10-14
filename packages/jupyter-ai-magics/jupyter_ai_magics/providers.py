@@ -245,4 +245,3 @@ class QianfanProvider(BaseProvider, QianfanChatEndpoint):
     model_id_key = "model_name"
     pypi_package_deps = ["qianfan"]
     auth_strategy = MultiEnvAuthStrategy(names=["QIANFAN_AK", "QIANFAN_SK"])
-'''
