@@ -4,7 +4,7 @@ import logging
 import os
 import requests
 import subprocess
-from typing import Any, AsyncIterator, Dict, Iterator, List, Mapping, Optional
+from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, List, Mapping, Optional
 
 from jupyter_ai_magics import BaseProvider
 from jupyter_ai_magics.providers import MultiEnvAuthStrategy
@@ -24,19 +24,29 @@ from cloudera_ai_inference_package.model_discovery import getCopilotModels
 class ClouderaAIInferenceLanguageModelProvider(BaseProvider, SimpleChatModel, LLM):
     id = "cloudera"
     name = "Cloudera AI Inference Provider"
-    model = ""
     model_id_key = ""
 
-    copilot_config_dir = os.getenv("COPILOT_CONFIG_DIR") or ""
-    ai_inference_models, models = getCopilotModels(copilot_config_dir, model_type="inference")
-    jwt_path = '/tmp/jwt'
+    # Add model as a Pydantic field
+    model: str = ""
 
-    MAX_TOKENS = 2048
+    copilot_config_dir: str = os.getenv("COPILOT_CONFIG_DIR") or ""
+    ai_inference_models: ClassVar[str] = ""
+    models: ClassVar[str] = ""
+    ai_inference_models, models = getCopilotModels(copilot_config_dir, model_type="inference")
+    jwt_path: ClassVar[str] = '/tmp/jwt'
+
+    MAX_TOKENS: ClassVar[int] = 2048
 
     def __init__(self, **kwargs):
+        print(kwargs)
+        # Call parent constructors first to initialize Pydantic
         super().__init__(**kwargs)
-        self.model = kwargs.get("model_id")
+
+        # Now set the model attribute after Pydantic initialization
+        self.model = kwargs.get("model_id", "")
+
         logging.basicConfig(filename="copilot.txt", level=logging.DEBUG, format="")
+
 
     @property
     def _llm_type(self) -> str:

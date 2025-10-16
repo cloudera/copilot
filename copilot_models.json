@@ -2,11 +2,6 @@
   "copilot_models": [
     {
       "provider": "Amazon Bedrock",
-      "model": "anthropic.claude-v2",
-      "provider_id": "bedrock-chat"
-    },
-    {
-      "provider": "Amazon Bedrock",
       "model": "anthropic.claude-3-5-haiku-20241022-v1:0",
       "provider_id": "bedrock-chat"
     },
@@ -32,7 +27,7 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "mistral.mistral-large-2402-v1:0",
+      "model": "mistral.mistral-large-2407-v1:0",
       "provider_id": "bedrock"
     }
   ]

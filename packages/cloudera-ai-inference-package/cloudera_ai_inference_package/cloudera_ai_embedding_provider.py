@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import ClassVar
 
 import requests
 from jupyter_ai_magics import BaseEmbeddingsProvider
@@ -15,14 +16,18 @@ class ClouderaAIInferenceEmbeddingModelProvider(BaseEmbeddingsProvider, Embeddin
     id = "cloudera"
     name = "Cloudera AI Embedding Provider"
     model_id_key = "model_id"
-    jwt_path = '/tmp/jwt'
+    jwt_path: ClassVar[str] = '/tmp/jwt'
 
-    API_SYNTAX = "OPENAI"
+    API_SYNTAX: ClassVar[str] = "OPENAI"
+    ai_inference_models: ClassVar[str] = ""
+    models: ClassVar[str] = ""
     ai_inference_models, models = getCopilotModels(
         os.getenv("COPILOT_CONFIG_DIR", ""), model_type="embedding"
     )
 
     # Read from both config files, as embedding models could still be in the old config file for an older CML version.
+    embedding_ai_inference_models: ClassVar[str] = ""
+    embedding_models: ClassVar[str] = ""
     embedding_ai_inference_models, embedding_models = getCopilotModels(
         os.getenv("COPILOT_EMBEDDING_CONFIG_DIR", ""), model_type="embedding"
     )
