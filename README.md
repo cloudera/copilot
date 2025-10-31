@@ -13,6 +13,9 @@ Then, figure out the latest stable release. At the time of writing this, it is v
 git merge public/main@{v2.19.1}
 ```
 
+# Bedrock Models
+The list of enabled Bedrock language models is in copilot_models.json, and the list of enabled Bedrock embedding models is in copilot_embedding_models.json.  Any time this changes, please update the Makefile in https://github.infra.cloudera.com/Sense/engine
+
 # Jupyter AI
 
 **Jupyter AI is under incubation as part of the JupyterLab organization.**
