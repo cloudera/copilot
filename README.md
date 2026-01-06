@@ -202,3 +202,5 @@ For help with installing and using Jupyter AI, please see our
 
 If you would like to contribute to Jupyter AI, see our
 [contributor documentation on ReadTheDocs](https://jupyter-ai.readthedocs.io/en/latest/contributors/index.html).
+
+
