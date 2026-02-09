@@ -73,6 +73,7 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
         "anthropic.claude-3-5-haiku-20241022-v1:0",
         "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "anthropic.claude-sonnet-4-5-20250929-v1:0",
         "meta.llama2-13b-chat-v1",
         "meta.llama2-70b-chat-v1",
         "meta.llama3-8b-instruct-v1:0",
