@@ -7,7 +7,7 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "anthropic.claude-opus-4-6-v1",
+      "model": "global.anthropic.claude-opus-4-6-v1",
       "provider_id": "bedrock-chat"
     },
     {
