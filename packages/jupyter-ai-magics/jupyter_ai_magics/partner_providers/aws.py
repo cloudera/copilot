@@ -34,10 +34,14 @@ class BedrockProvider(BaseProvider, BedrockLLM):
         "meta.llama3-1-8b-instruct-v1:0",
         "meta.llama3-1-70b-instruct-v1:0",
         "meta.llama3-1-405b-instruct-v1:0",
+        "meta.llama3-3-70b-instruct-v1:0",
+        "meta.llama4-maverick-17b-instruct-v1:0",
         "mistral.mistral-7b-instruct-v0:2",
         "mistral.mixtral-8x7b-instruct-v0:1",
         "mistral.mistral-large-2402-v1:0",
         "mistral.mistral-large-2407-v1:0",
+        "mistral.ministral-3-14b-instruct",
+        "mistral.mistral-large-3-675b-instruct",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
@@ -73,7 +77,12 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
         "anthropic.claude-3-5-haiku-20241022-v1:0",
         "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
+        "anthropic.claude-opus-4-5-20251101-v1:0",
+        "anthropic.claude-opus-4-6-v1",
+        "anthropic.claude-sonnet-4-5-20250929-v1:0",
         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
         "meta.llama2-13b-chat-v1",
         "meta.llama2-70b-chat-v1",
         "meta.llama3-8b-instruct-v1:0",
@@ -127,7 +136,7 @@ class BedrockCustomProvider(BaseProvider, ChatBedrock):
         ),
     ]
     help = (
-        "- For Cross-Region Inference use the appropriate `Inference profile ID` (Model ID with a region prefix, e.g., `us.meta.llama3-2-11b-instruct-v1:0`). See the [inference profiles documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html). \n"
+        "- For Cross-Region Inference use the appropriate `Inference profile ID` (for example, a region prefix such as `us.meta.llama3-2-11b-instruct-v1:0`, or global profile IDs such as `global.anthropic.claude-sonnet-4-5-20250929-v1:0`). See the [inference profiles documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html). \n"
         "- For custom/provisioned models, specify the model ARN (Amazon Resource Name) as the model ID. For more information, see the [Amazon Bedrock model IDs documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html).\n\n"
         "The model provider must also be specified below. This is the provider of your foundation model *in lowercase*, e.g., `amazon`, `anthropic`, `cohere`, `meta`, or `mistral`."
     )
@@ -141,6 +150,7 @@ class BedrockEmbeddingsProvider(BaseEmbeddingsProvider, BedrockEmbeddings):
     models = [
         "amazon.titan-embed-text-v1",
         "amazon.titan-embed-text-v2:0",
+        "cohere.embed-v4:0",
         "cohere.embed-english-v3",
         "cohere.embed-multilingual-v3",
     ]
