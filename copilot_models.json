@@ -18,22 +18,22 @@
     {
       "provider": "Amazon Bedrock",
       "model": "us.meta.llama3-3-70b-instruct-v1:0",
-      "provider_id": "bedrock-chat"
+      "provider_id": "bedrock"
     },
     {
       "provider": "Amazon Bedrock",
       "model": "us.meta.llama4-maverick-17b-instruct-v1:0",
-      "provider_id": "bedrock-chat"
+      "provider_id": "bedrock"
     },
     {
       "provider": "Amazon Bedrock",
       "model": "mistral.ministral-3-14b-instruct",
-      "provider_id": "bedrock-chat"
+      "provider_id": "bedrock"
     },
     {
       "provider": "Amazon Bedrock",
       "model": "mistral.mistral-large-3-675b-instruct",
-      "provider_id": "bedrock-chat"
+      "provider_id": "bedrock"
     }
   ]
 }
