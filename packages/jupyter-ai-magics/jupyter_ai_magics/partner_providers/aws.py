@@ -44,6 +44,8 @@ class BedrockProvider(BaseProvider, BedrockLLM):
         "mistral.mistral-large-2407-v1:0",
         "mistral.ministral-3-14b-instruct",
         "mistral.mistral-large-3-675b-instruct",
+        "us.mistral.ministral-3-14b-instruct",
+        "us.mistral.mistral-large-3-675b-instruct",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
@@ -101,6 +103,8 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
         "mistral.mistral-large-2407-v1:0",
         "mistral.ministral-3-14b-instruct",
         "mistral.mistral-large-3-675b-instruct",
+        "us.mistral.ministral-3-14b-instruct",
+        "us.mistral.mistral-large-3-675b-instruct",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
