@@ -121,6 +121,8 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
     def __init__(self, *args, **kwargs):
         model_id = kwargs.get("model_id", "")
         mistral_converse_ids = {
+            "mistral.ministral-3-14b-instruct",
+            "mistral.mistral-large-3-675b-instruct",
             "us.mistral.ministral-3-14b-instruct",
             "us.mistral.mistral-large-3-675b-instruct",
         }

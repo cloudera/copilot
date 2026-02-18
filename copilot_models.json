@@ -27,12 +27,12 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "us.mistral.ministral-3-14b-instruct",
+      "model": "mistral.ministral-3-14b-instruct",
       "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "us.mistral.mistral-large-3-675b-instruct",
+      "model": "mistral.mistral-large-3-675b-instruct",
       "provider_id": "bedrock-chat"
     }
   ]
