@@ -184,6 +184,13 @@ class BedrockEmbeddingsProvider(BaseEmbeddingsProvider, BedrockEmbeddings):
     pypi_package_deps = ["langchain-aws"]
     auth_strategy = AwsAuthStrategy()
 
+    def __init__(self, *args, **kwargs):
+        model_id = kwargs.get("model_id", "")
+        # Ensure profile-prefixed Cohere IDs still use Cohere payload format.
+        if model_id.startswith("cohere.") or ".cohere." in model_id:
+            kwargs.setdefault("provider", "cohere")
+        super().__init__(*args, **kwargs)
+
 
 class JsonContentHandler(LLMContentHandler):
     content_type = "application/json"
