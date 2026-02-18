@@ -118,6 +118,18 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
         TextField(key="region_name", label="Region name (optional)", format="text"),
     ]
 
+    def __init__(self, *args, **kwargs):
+        model_id = kwargs.get("model_id", "")
+        mistral_converse_ids = {
+            "us.mistral.ministral-3-14b-instruct",
+            "us.mistral.mistral-large-3-675b-instruct",
+        }
+        # New Mistral profile/model IDs should use Converse payload format.
+        if model_id in mistral_converse_ids:
+            kwargs.setdefault("provider", "mistral")
+            kwargs.setdefault("beta_use_converse_api", True)
+        super().__init__(*args, **kwargs)
+
     async def _acall(self, *args, **kwargs) -> Coroutine[Any, Any, str]:
         return await self._call_in_executor(*args, **kwargs)
 
