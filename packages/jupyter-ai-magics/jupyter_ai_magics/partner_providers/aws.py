@@ -157,6 +157,7 @@ class BedrockEmbeddingsProvider(BaseEmbeddingsProvider, BedrockEmbeddings):
     models = [
         "amazon.titan-embed-text-v1",
         "amazon.titan-embed-text-v2:0",
+        "global.cohere.embed-v4:0",
         "cohere.embed-v4:0",
         "cohere.embed-english-v3",
         "cohere.embed-multilingual-v3",
