@@ -18,12 +18,12 @@
     {
       "provider": "Amazon Bedrock",
       "model": "us.meta.llama3-3-70b-instruct-v1:0",
-      "provider_id": "bedrock"
+      "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
       "model": "us.meta.llama4-maverick-17b-instruct-v1:0",
-      "provider_id": "bedrock"
+      "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
