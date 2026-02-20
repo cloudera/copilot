@@ -34,10 +34,17 @@ class BedrockProvider(BaseProvider, BedrockLLM):
         "meta.llama3-1-8b-instruct-v1:0",
         "meta.llama3-1-70b-instruct-v1:0",
         "meta.llama3-1-405b-instruct-v1:0",
+        "us.meta.llama3-3-70b-instruct-v1:0",
+        "us.meta.llama4-maverick-17b-instruct-v1:0",
         "mistral.mistral-7b-instruct-v0:2",
         "mistral.mixtral-8x7b-instruct-v0:1",
         "mistral.mistral-large-2402-v1:0",
         "mistral.mistral-large-2407-v1:0",
+        "mistral.ministral-3-14b-instruct",
+        "mistral.mistral-large-3-675b-instruct",
+        "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+        "global.anthropic.claude-opus-4-6-v1",
+        "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
