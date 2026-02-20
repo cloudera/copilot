@@ -46,6 +46,9 @@ class BedrockProvider(BaseProvider, BedrockLLM):
         "mistral.mistral-large-3-675b-instruct",
         "us.mistral.ministral-3-14b-instruct",
         "us.mistral.mistral-large-3-675b-instruct",
+        "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+        "global.anthropic.claude-opus-4-6-v1",
+        "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
@@ -79,7 +82,6 @@ class BedrockChatProvider(BaseProvider, ChatBedrock):
         "anthropic.claude-3-opus-20240229-v1:0",
         "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "anthropic.claude-3-5-haiku-20241022-v1:0",
-        "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
         "global.anthropic.claude-haiku-4-5-20251001-v1:0",
