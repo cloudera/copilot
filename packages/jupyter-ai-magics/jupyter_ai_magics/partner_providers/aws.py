@@ -158,22 +158,12 @@ class BedrockEmbeddingsProvider(BaseEmbeddingsProvider, BedrockEmbeddings):
     models = [
         "amazon.titan-embed-text-v1",
         "amazon.titan-embed-text-v2:0",
-        "global.cohere.embed-v4:0",
-        "cohere.embed-v4:0",
         "cohere.embed-english-v3",
         "cohere.embed-multilingual-v3",
     ]
     model_id_key = "model_id"
     pypi_package_deps = ["langchain-aws"]
     auth_strategy = AwsAuthStrategy()
-
-    def __init__(self, *args, **kwargs):
-        model_id = kwargs.get("model_id", "")
-        # Ensure profile-prefixed Cohere IDs still use Cohere payload format.
-        if model_id.startswith("cohere.") or ".cohere." in model_id:
-            kwargs.setdefault("provider", "cohere")
-        super().__init__(*args, **kwargs)
-
 
 class JsonContentHandler(LLMContentHandler):
     content_type = "application/json"

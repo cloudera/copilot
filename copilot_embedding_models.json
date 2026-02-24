@@ -7,7 +7,7 @@
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "global.cohere.embed-v4:0",
+      "model": "cohere.embed-english-v3",
       "provider_id": "bedrock"
     },
     {
