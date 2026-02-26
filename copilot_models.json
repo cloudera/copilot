@@ -2,17 +2,32 @@
   "copilot_models": [
     {
       "provider": "Amazon Bedrock",
-      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "model": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
       "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "global.anthropic.claude-opus-4-6-v1",
+      "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
       "provider_id": "bedrock-chat"
     },
     {
       "provider": "Amazon Bedrock",
-      "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "model": "us.anthropic.claude-opus-4-6-v1",
+      "provider_id": "bedrock-chat"
+    },
+    {
+      "provider": "Amazon Bedrock",
+      "model": "eu.anthropic.claude-opus-4-6-v1",
+      "provider_id": "bedrock-chat"
+    },
+    {
+      "provider": "Amazon Bedrock",
+      "model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "provider_id": "bedrock-chat"
+    },
+    {
+      "provider": "Amazon Bedrock",
+      "model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "provider_id": "bedrock-chat"
     },
     {
